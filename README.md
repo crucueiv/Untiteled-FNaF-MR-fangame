@@ -9,7 +9,9 @@ A **Five Nights at Freddy's** fan game built for **Meta Quest** using **Mixed Re
 - **Passthrough Lighting System** — Controls room brightness and flickering effects via OVRPassthroughLayer for horror atmosphere
 - **Physical Inventory System** — Waist-mounted inventory that follows the player, with snap-to-slot item storage and release
 - **Hand Tracking & Controller Support** — Grabbable items that hide the visual controller model while held
-- **Dynamic Darkness Shader** — Custom HLSL shader that darkens and becomes transparent based on light received, with shadow casting support
+- **Grabbable Flashlight** — Controller-attached flashlight toggleable via thumbstick with grab detection using Meta's GrabInteractable
+- **MR Debugger Menu** — In-game debug panel for testing light states, flicker effects, and spawning prefabs at runtime
+- **Dynamic Darkness Revealer Shader** — Custom HLSL shader that reveals darkness where light doesn't reach, with shadow casting and light cookie support
 
 ## Requirements
 
@@ -29,17 +31,20 @@ Assets/
 │   ├── Scripts/
 │   │   ├── Managers/
 │   │   │   ├── RoomLightManager.cs      # Passthrough brightness & flicker effects
-│   │   │   └── VisualsManager.cs        # Controller visual references
-│   │   ├── MR/
-│   │   │   ├── RoomValidator.cs         # Validates MR room has required furniture
-│   │   │   └── MRSpawnerReworked.cs     # Spawns objects on MR surfaces with precision
+│   │   │   ├── VisualsManager.cs        # Controller visual references
+│   │   │   ├── GrabbableItemManager.cs  # Handles grab events & controller visual hiding
+│   │   │   └── RoomValidator.cs         # Validates MR room has required furniture
 │   │   ├── Inventory/
 │   │   │   ├── InventorySlot.cs          # Snap-to-slot inventory with grab/release
 │   │   │   └── InventoryBodyFollower.cs # Waist inventory that smoothly follows the head
-│   │   └── Items/
-│   │       └── GrabbableItemManager.cs  # Handles grab events & controller visual hiding
+│   │   ├── Items/
+│   │   │   ├── MRSpawnerReworked.cs     # Spawns objects on MR surfaces with precision
+│   │   │   └── FlashlightController.cs  # Grabbable flashlight with thumbstick toggle
+│   │   └── Debbug/
+│   │       ├── MRDebuggerMenu.cs       # Debug panel for lights & spawning
+│   │       └── DebuggerHandToggle.cs   # Toggles debugger menu via Start button
 │   ├── Shaders/
-│   │   ├── DarknessTransparent.shader   # Darkens + transparent based on light
+│   │   ├── DarknessRevealer.shader      # Reveals darkness where light doesn't reach
 │   │   └── HighlightsAndShadows.shader  # Meta MR highlights and shadows
 │   ├── Prefabs/
 │   │   └── GrabbableObject.prefab
@@ -68,22 +73,27 @@ A waist-mounted inventory that follows the player's head with smooth interpolati
 ### Grabbable Items (`GrabbableItemManager`)
 Handles grab events from XR Interaction Toolkit and hides the controller visual model while an item is held.
 
-### Darkness Transparent Shader (`DarknessTransparent`)
+### Grabbable Flashlight (`FlashlightController`)
+Uses Meta's GrabInteractable to detect when the player picks up a flashlight. Toggles the spotlight on/off via thumbstick press (Left thumbstick for left hand, Right thumbstick for right hand). Automatically turns off when released to prevent lighting bugs.
+
+### MR Debugger Menu (`MRDebuggerMenu` + `DebuggerHandToggle`)
+Runtime debug panel for testing: toggles room lights on/off, triggers flicker effects, and spawns prefabs 1.5m in front of the player. Toggle visibility with the Start button on the left controller.
+
+### Darkness Revealer Shader (`DarknessRevealer`)
 Custom HLSL shader for URP with the following behavior:
-- **Darkens** when receiving less light (NdotL-based diffuse + distance attenuation)
-- **Becomes transparent** as light decreases, showing the light color behind
-- **Receives shadows** from other objects via `MainLightRealtimeShadow`
-- **Casts shadows** via ShadowCaster pass
-- **No reflections/specular** — pure diffuse for a dark appearance
-- Supports **all light types** (directional, point, spot) and sums them all
-- **Transparent color** filters through using the actual light color received
+- **Reveals darkness** in areas not reached by light (inverse of traditional transparency)
+- **Light cookie support** — projects flashlight/spotlight patterns onto the darkness
+- **Shadow casting and receiving** — properly integrates with Unity's shadow system
+- **Premultiplied alpha** — correctly blends with the real world passthrough
+- **Supports all light types** (directional, point, spot) with proper attenuation
 
 **Shader Properties:**
 | Property | Type | Description |
 |----------|------|-------------|
-| `_BaseColor` | Color (HDR) | Base color of the object (default black) |
-| `_DarknessIntensity` | Range(0,1) | Intensity of the darkness effect |
-| `_LightTransparency` | Range(0,1) | How sensitive transparency is to light |
+| `_DarknessColor` | Color | Base color of the darkness (default black) |
+| `_LightSensitivity` | Range(0.1, 10) | How sensitive the reveal is to light intensity |
+| `_TintStrength` | Range(0, 1) | Subtle color variation based on nearby light color |
+| `_CookieStrength` | Range(0, 5) | Intensity multiplier for light cookies |
 
 ## Setup
 
