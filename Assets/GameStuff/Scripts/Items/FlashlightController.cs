@@ -107,7 +107,7 @@ public class FlashlightController : MonoBehaviour
         if (!isGrabbed || grabbingController == OVRInput.Controller.None) return;
 
         // OVRInput.Button.PrimaryThumbstick mapea el "Click" hacia dentro del Joystick físico
-        if (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, grabbingController))
+        if (OVRInput.GetDown(buttonToInteract, grabbingController))
         {
             ToggleFlashlight();
         }
