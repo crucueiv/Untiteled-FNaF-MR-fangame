@@ -5132,7 +5132,7 @@ MonoBehaviour:
   BarycentricCoordinatesEnabled: 0
   Colliders: 1
   CutHoles: 96
-  castShadows: 1
+  castShadows: 0
   hideMesh: 0
   Layer: 0
   textureCoordinateModes:

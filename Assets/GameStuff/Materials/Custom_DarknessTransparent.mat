@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Custom_DarknessTransparent
-  m_Shader: {fileID: 4800000, guid: 27ff4960d4cc93f45ab317d91e856f22, type: 3}
+  m_Shader: {fileID: 4800000, guid: e7d442dc039fb9c45ba2eb528abcc0ac, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -25,11 +25,22 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _BaseDarkness: 0.05
+    - _CookieContrast: 1.5
+    - _CookieIntensity: 2
+    - _CookieStrength: 1
     - _DarknessIntensity: 1
-    - _LightSensitivity: 2
-    - _LightTint: 2
+    - _EdgeSharpness: 4
+    - _EnvironmentDepthBias: 0.06
+    - _HighLightAttenuation: 0.8
+    - _HighlightOpacity: 0.2
+    - _LightSensitivity: 3
+    - _LightTint: 1
     - _LightTransparency: 1
+    - _ShadowIntensity: 0.8
+    - _TintStrength: 0.05
     m_Colors:
     - _BaseColor: {r: 0, g: 0, b: 0, a: 1}
+    - _DarknessColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
