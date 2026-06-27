@@ -133,7 +133,6 @@
   <Project Path="Unity.AI.Navigation.csproj" />
   <Project Path="Unity.XR.Interaction.Toolkit.Analytics.Hooks.Editor.csproj" />
   <Project Path="Unity.Collections.CodeGen.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Meta.XR.MetaWand.Editor.csproj" />
   <Project Path="VoiceSDK.Dictation.Editor.csproj" />
   <Project Path="Unity.XR.Management.csproj" />
@@ -177,6 +176,7 @@
   <Project Path="Meta.XR.Editor.UPST.Notifications.csproj" />
   <Project Path="Oculus.Interaction.Samples.Editor.csproj" />
   <Project Path="Unity.RenderPipeline.Universal.ShaderLibrary.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Unity.XR.Interaction.Toolkit.Samples.ARStarterAssets.csproj" />
   <Project Path="Meta.XR.RuntimeOptimizer.csproj" />
   <Project Path="Meta.XR.Editor.Callbacks.csproj" />
