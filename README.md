@@ -2,6 +2,8 @@
 
 A **Five Nights at Freddy's** fan game built for **Meta Quest** using **Mixed Reality**. The game uses your real room as the environment, blending physical and virtual elements through passthrough AR.
 
+> **¿Vas a continuar el proyecto en otro ordenador?** Sigue la [guía de desarrollo y puesta en marcha](GUIA_DESARROLLO.md) (español), con las versiones, módulos de Unity, Quest, Git y pasos de compilación de este proyecto.
+
 ## Features
 
 - **Mixed Reality Room Detection** — Scans your real room using Meta's MR Utility Kit (MRUK) and validates it has the required furniture (door, table, bed/couch)
@@ -15,6 +17,8 @@ A **Five Nights at Freddy's** fan game built for **Meta Quest** using **Mixed Re
 
 ## Requirements
 
+- **Git + Git LFS** — models, textures, fonts and audio are stored in Git LFS
+- **Unity Hub** with Android Build Support, Android SDK & NDK Tools, and OpenJDK installed for the project editor
 - **Unity** 6000.3.18f1 (Unity 6)
 - **Meta Quest** headset (Quest 3 / Quest 3S recommended for MR)
 - **Meta XR SDK** v203.0.0
@@ -97,11 +101,9 @@ Custom HLSL shader for URP with the following behavior:
 
 ## Setup
 
-1. Clone this repository
-2. Open the project in Unity 6000.3.18f1
-3. Ensure Meta Quest Link is set up and Passthrough is enabled
-4. Open `Assets/GameStuff/TestScenes/InitialTestRoom.unity`
-5. Build and run on your Quest headset
+For a reproducible setup on a new computer, including Android build modules and headset deployment, follow [`GUIA_DESARROLLO.md`](GUIA_DESARROLLO.md).
+
+Quick start: clone this repository, open it with Unity **6000.3.18f1**, wait for Package Manager to finish resolving the locked dependencies, then open `Assets/GameStuff/TestScenes/InitialTestRoom.unity`.
 
 ## Room Setup
 

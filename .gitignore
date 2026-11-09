@@ -105,4 +105,9 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Local Android signing secrets and machine-specific Android SDK path
+*.keystore
+*.jks
+local.properties
 AGENTS.md
