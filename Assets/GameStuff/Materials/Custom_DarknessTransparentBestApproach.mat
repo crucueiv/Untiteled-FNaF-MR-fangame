@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Custom_DarknessTransparentBestApproach
+  m_Shader: {fileID: 4800000, guid: e7d442dc039fb9c45ba2eb528abcc0ac, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Ints: []
+    m_Floats:
+    - _BaseDarkness: 0.05
+    - _CookieContrast: 1.5
+    - _CookieIntensity: 2
+    - _CookieStrength: 1
+    - _DarknessIntensity: 1
+    - _EdgeSharpness: 4
+    - _EnvironmentDepthBias: 0.06
+    - _HighLightAttenuation: 0.8
+    - _HighlightOpacity: 0.2
+    - _LightSensitivity: 3
+    - _LightTint: 1
+    - _LightTransparency: 1
+    - _ShadowIntensity: 0.8
+    - _TintStrength: 0.05
+    m_Colors:
+    - _BaseColor: {r: 0, g: 0, b: 0, a: 1}
+    - _DarknessColor: {r: 0, g: 0, b: 0, a: 0.9137255}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

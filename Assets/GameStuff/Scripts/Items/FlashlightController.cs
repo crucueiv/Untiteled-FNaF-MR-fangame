@@ -12,102 +12,102 @@ public class FlashlightController : MonoBehaviour
     private bool isFlashlightOn = false;
     private bool isGrabbed = false;
     private OVRInput.Controller grabbingController = OVRInput.Controller.None;
-    private OVRInput.Button buttonToInteract = OVRInput.Button.None;
 
     void Awake()
     {
-        // Buscamos automáticamente el componente de agarre de Meta SDK
         grabInteractable = GetComponentInChildren<GrabInteractable>();
         if (grabInteractable == null)
-        {
-            Debug.LogError("FlashlightController: No se encontró un componente GrabInteractable en este objeto o sus hijos.");
-        }
+            Debug.LogError("FlashlightController: No se encontró GrabInteractable en este objeto o sus hijos.");
     }
 
     void Start()
     {
         if (spotlight != null)
-        {
             spotlight.enabled = isFlashlightOn;
-        }
         else
-        {
             Debug.LogWarning("FlashlightController: No has asignado el Spotlight en el inspector.");
-        }
     }
 
     void OnEnable()
     {
         if (grabInteractable != null)
-        {
             grabInteractable.WhenStateChanged += HandleStateChanged;
-        }
     }
 
     void OnDisable()
     {
         if (grabInteractable != null)
-        {
             grabInteractable.WhenStateChanged -= HandleStateChanged;
-        }
     }
 
     private void HandleStateChanged(InteractableStateChangeArgs args)
     {
-        // Se ejecuta cuando el jugador agarra el objeto
         if (args.NewState == InteractableState.Select)
         {
             isGrabbed = true;
             DetermineGrabbingController();
         }
-        // Se ejecuta cuando el jugador suelta el objeto
-        else if (args.NewState != InteractableState.Select && args.PreviousState == InteractableState.Select)
+        else if (args.PreviousState == InteractableState.Select)
         {
             isGrabbed = false;
             grabbingController = OVRInput.Controller.None;
 
-            // Opcional: Apagamos la linterna automáticamente al soltarla para evitar bugs de batería o iluminación
-            if (isFlashlightOn)
-            {
-                ToggleFlashlight();
-            }
+            // El estado (on/off) persiste independientemente de si está agarrada o no.
         }
     }
 
     private void DetermineGrabbingController()
     {
-        // Evaluamos cuál de los interactores de Meta ha seleccionado la linterna
-            if(grabInteractable.SelectingInteractors.Count == 0) return;
-            IInteractor interactor = grabInteractable.SelectingInteractors.FirstOrDefault();
-            GameObject interactorGO = (interactor as MonoBehaviour)?.gameObject;
-            string interactorName = interactorGO.name.ToLower();
-            
-            // Analizamos el nombre del bloque que interactúa (Meta suele llamarlos LeftController... o RightController...)
-            if (interactorName.Contains("left") || interactorName.Contains("l_"))
+        if (grabInteractable.SelectingInteractors.Count == 0) return;
+
+        IInteractor interactor = grabInteractable.SelectingInteractors.FirstOrDefault();
+        GameObject interactorGO = (interactor as MonoBehaviour)?.gameObject;
+        if (interactorGO == null) return;
+
+        bool isLeft = false;
+        bool foundHand = false;
+        Transform current = interactorGO.transform;
+
+        // BÚSQUEDA PROFUNDA: Revisamos toda la jerarquía hacia arriba para encontrar 
+        // si este interactor pertenece al brazo izquierdo o derecho, igual que GrabbableItemManager.
+        while (current != null)
+        {
+            string nameLower = current.name.ToLower();
+            if (nameLower.Contains("left") || nameLower.Contains("l_"))
             {
-                grabbingController = OVRInput.Controller.LTouch;
-                buttonToInteract = OVRInput.Button.PrimaryThumbstick;
-                return;
+                isLeft = true;
+                foundHand = true;
+                break;
             }
-            if (interactorName.Contains("right") || interactorName.Contains("r_"))
+            if (nameLower.Contains("right") || nameLower.Contains("r_"))
             {
-                grabbingController = OVRInput.Controller.RTouch;
-                buttonToInteract = OVRInput.Button.SecondaryThumbstick;
-                return;
+                foundHand = true;
+                break; // remains false (is right)
             }
-        
-        
-        // Failsafe: Si por alguna razón no lo detecta, usamos el mando activo
-        grabbingController = OVRInput.Controller.Active;
+            current = current.parent;
+        }
+
+        if (foundHand)
+        {
+            grabbingController = isLeft ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
+        }
+        else
+        {
+            // Failsafe: usa cualquier mando activo
+            grabbingController = OVRInput.Controller.Active;
+        }
     }
 
     void Update()
     {
-        // Si no está agarrada o no se reconoce el mando, no hacemos nada
+        // Solo actúa si está agarrada y el mando está identificado
         if (!isGrabbed || grabbingController == OVRInput.Controller.None) return;
 
-        // OVRInput.Button.PrimaryThumbstick mapea el "Click" hacia dentro del Joystick físico
-        if (OVRInput.GetDown(buttonToInteract, grabbingController))
+        // PrimaryThumbstick + controller específico (LTouch/RTouch) siempre se refiere
+        // al joystick de ESE mando. No es necesario cambiar el botón según la mano.
+        // El error anterior: SecondaryThumbstick + RTouch buscaba el joystick izquierdo
+        // filtrado por el mando derecho, lo cual nunca se disparaba.
+        if (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, grabbingController))
         {
             ToggleFlashlight();
         }
@@ -117,8 +117,6 @@ public class FlashlightController : MonoBehaviour
     {
         isFlashlightOn = !isFlashlightOn;
         if (spotlight != null)
-        {
             spotlight.enabled = isFlashlightOn;
-        }
     }
 }
