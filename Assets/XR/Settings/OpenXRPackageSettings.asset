@@ -502,7 +502,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee92377a8e0c873458b71a94a80f3394, type: 3}
   m_Name: ApiLayersFeature Standalone
   m_EditorClassIdentifier: Unity.XR.OpenXR::UnityEngine.XR.OpenXR.Features.ApiLayersFeature
-  m_enabled: 0
+  m_enabled: 1
   nameUi: API Layers
   version: 1.0.0
   featureIdInternal: com.unity.openxr.feature.apilayers
@@ -1606,6 +1606,7 @@ MonoBehaviour:
   - {fileID: 2487393751436357153}
   - {fileID: 7954519031406849261}
   - {fileID: -566222891963269797}
+  - {fileID: 108951795294696428}
   customLoaderName: 
   m_renderMode: 1
   m_latencyOptimization: 1
@@ -2025,6 +2026,28 @@ MonoBehaviour:
   targetOpenXRApiVersion: 
   required: 0
   customRuntimeLoaderName: 
+--- !u!114 &108951795294696428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f6e474bff397ab5bbad2f935509283e, type: 3}
+  m_Name: MicrogestureOpenXRFeature Android
+  m_EditorClassIdentifier: Oculus.Interaction.UnityXR::Oculus.Interaction.Input.UnityXR.MicrogestureOpenXRFeature
+  m_enabled: 0
+  nameUi: Meta Hand Microgestures
+  version: 0.0.1
+  featureIdInternal: com.meta.openxr.feature.input.hand.microgestures
+  openxrExtensionStrings: XR_META_hand_tracking_microgestures XR_EXT_hand_interaction
+  company: Meta
+  priority: 0
+  targetOpenXRApiVersion: 
+  required: 0
+  customRuntimeLoaderName: 
 --- !u!114 &240886610844814212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2431,6 +2454,28 @@ MonoBehaviour:
   featureIdInternal: com.unity.openxr.feature.input.androidmouse
   openxrExtensionStrings: XR_ANDROID_mouse_interaction
   company: Unity
+  priority: 0
+  targetOpenXRApiVersion: 
+  required: 0
+  customRuntimeLoaderName: 
+--- !u!114 &2084323183759518939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f6e474bff397ab5bbad2f935509283e, type: 3}
+  m_Name: MicrogestureOpenXRFeature Standalone
+  m_EditorClassIdentifier: Oculus.Interaction.UnityXR::Oculus.Interaction.Input.UnityXR.MicrogestureOpenXRFeature
+  m_enabled: 0
+  nameUi: Meta Hand Microgestures
+  version: 0.0.1
+  featureIdInternal: com.meta.openxr.feature.input.hand.microgestures
+  openxrExtensionStrings: XR_META_hand_tracking_microgestures XR_EXT_hand_interaction
+  company: Meta
   priority: 0
   targetOpenXRApiVersion: 
   required: 0
@@ -3301,6 +3346,7 @@ MonoBehaviour:
   - {fileID: -2660248969759337808}
   - {fileID: -8348305862583253533}
   - {fileID: -8200099466732163803}
+  - {fileID: 2084323183759518939}
   customLoaderName: 
   m_renderMode: 1
   m_latencyOptimization: 0

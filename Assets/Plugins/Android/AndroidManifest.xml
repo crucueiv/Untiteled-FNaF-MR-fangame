@@ -13,6 +13,7 @@
     <meta-data android:name="com.oculus.ossplash.background" android:value="passthrough-contextual" />
     <meta-data android:name="com.oculus.telemetry.project_guid" android:value="735d08df-9641-4561-a571-6a7ac477563d" />
     <meta-data android:name="com.oculus.supportedDevices" android:value="quest3" tools:replace="android:value" />
+    <meta-data android:name="com.oculus.useForwardHeadPose" android:value="true" />
   </application>
   <uses-feature android:name="android.hardware.vr.headtracking" android:version="1" android:required="true" />
   <horizonos:uses-horizonos-sdk horizonos:minSdkVersion="60" horizonos:targetSdkVersion="203" />

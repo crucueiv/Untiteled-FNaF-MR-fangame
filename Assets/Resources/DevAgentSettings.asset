@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: DevAgentSettings
   m_EditorClassIdentifier: Meta.XR.ImmersiveDebugger.DevAgent::Meta.XR.ImmersiveDebugger.DevAgent.RuntimeSettings
   enabled: 1
-  serverAddress: 26.146.119.119
+  serverAddress: 192.168.1.108
   serverPort: 48735
-  mcpServerPort: 48736
+  useVoiceSdkForInput: 0
   witConfiguration: {fileID: 0}
+  witClientAccessToken: 
   pushToTalkButton: 1
   handPushToTalkGesture: 0
   enableDelayedRelease: 1
   releaseDelay: 0.8
-  accessToken: e9d07294e34047b4a97bf78ffcd168c7
+  accessToken: 4484d97d32434a81939a178b38962584

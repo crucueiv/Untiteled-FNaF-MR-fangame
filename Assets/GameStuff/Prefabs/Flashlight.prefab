@@ -260,6 +260,7 @@ GameObject:
   - component: {fileID: 2833689018546009155}
   - component: {fileID: 9154836730830747635}
   - component: {fileID: 7793640797796401976}
+  - component: {fileID: 6138472905164387251}
   m_Layer: 0
   m_Name: Flashlight
   m_TagString: KeepableObject
@@ -447,6 +448,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FlashlightController
   spotlight: {fileID: 4591793333591177721}
+--- !u!114 &6138472905164387251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8271988315340836602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fc4e247994c46459d7c3df3dba91ec9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GrabbedObjectButton
+  button: 32768
+  onButtonPressed:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 7793640797796401976}
+        m_TargetAssemblyTypeName: FlashlightController, Assembly-CSharp
+        m_MethodName: ToggleFlashlight
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument:
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &9048023248202824644
 GameObject:
   m_ObjectHideFlags: 0

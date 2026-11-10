@@ -1,0 +1,32 @@
+# Blender 3.4.1 MTL File: 'None'
+# www.blender.org
+
+newmtl Char_Mat_Bonnie_Body_1
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd Char_Tex_Bonnie_BaseColor.png
+
+newmtl Char_Mat_Endo_1
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd Char_Tex_Endoskeleton_BaseColor.png
+
+newmtl Char_Mat_Eye_Bonnie_1
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd Char_Tex_EYE_Bonnie_BaseColor.png

@@ -1,0 +1,21 @@
+newmtl acmat_0
+Kd 0.478431 0.537255 0.952941
+Ka 0.2 0.2 0.2
+Ks 1 1 1
+Ns 128
+Tr 0
+map_Kd Chica.png
+newmtl acmat_1
+Kd 0.666667 0.933333 0.592157
+Ka 0.2 0.2 0.2
+Ks 1 1 1
+Ns 128
+Tr 0
+map_Kd Endoskeleton.png
+newmtl acmat_2
+Kd 0.709804 0.537255 0.85098
+Ka 0.2 0.2 0.2
+Ks 1 1 1
+Ns 128
+Tr 0
+map_Kd Chica_EYES.png
