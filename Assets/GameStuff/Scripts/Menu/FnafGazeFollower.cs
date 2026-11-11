@@ -1,21 +1,28 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public sealed class FnafGazeFollower : MonoBehaviour
 {
-    public Transform gazeTarget;
+    [FormerlySerializedAs("gazeTarget")]
+    public Transform playerTarget;
     public Transform headJoint;
     public Transform[] eyeJoints;
+    public bool rotateBodyToPlayer = true;
+    public float bodyYawLimit = 42f;
     public float headYawLimit = 10f;
     public float headPitchLimit = 6f;
     public float eyeYawLimit = 22f;
     public float eyePitchLimit = 16f;
     public float responseSpeed = 7f;
 
+    private Quaternion bodyRestRotation;
     private Quaternion headRestRotation;
     private Quaternion[] eyeRestRotations;
 
     private void Awake()
     {
+        bodyRestRotation = transform.localRotation;
+
         if (headJoint != null)
             headRestRotation = headJoint.localRotation;
 
@@ -32,21 +39,28 @@ public sealed class FnafGazeFollower : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (gazeTarget == null)
+        if (playerTarget == null)
         {
             Camera mainCamera = Camera.main;
             if (mainCamera != null)
-                gazeTarget = mainCamera.transform;
+                playerTarget = mainCamera.transform;
         }
 
-        if (gazeTarget == null)
+        if (playerTarget == null)
             return;
 
         float blend = 1f - Mathf.Exp(-responseSpeed * Time.unscaledDeltaTime);
 
+        if (rotateBodyToPlayer)
+        {
+            Vector3 bodyDirection = DirectionInParentSpace(transform, playerTarget.position);
+            Quaternion bodyTargetRotation = bodyRestRotation * GazeOffset(bodyDirection, bodyYawLimit, 0f);
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, bodyTargetRotation, blend);
+        }
+
         if (headJoint != null)
         {
-            Vector3 direction = DirectionInParentSpace(headJoint, gazeTarget.position);
+            Vector3 direction = DirectionInParentSpace(headJoint, playerTarget.position);
             Quaternion targetRotation = headRestRotation * GazeOffset(direction, headYawLimit, headPitchLimit);
             headJoint.localRotation = Quaternion.Slerp(headJoint.localRotation, targetRotation, blend);
         }
@@ -57,7 +71,7 @@ public sealed class FnafGazeFollower : MonoBehaviour
             if (eye == null)
                 continue;
 
-            Vector3 direction = DirectionInParentSpace(eye, gazeTarget.position);
+            Vector3 direction = DirectionInParentSpace(eye, playerTarget.position);
             Quaternion targetRotation = eyeRestRotations[i] * GazeOffset(direction, eyeYawLimit, eyePitchLimit);
             eye.localRotation = Quaternion.Slerp(eye.localRotation, targetRotation, blend);
         }

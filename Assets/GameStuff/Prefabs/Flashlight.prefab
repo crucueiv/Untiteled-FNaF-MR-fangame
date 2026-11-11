@@ -261,6 +261,7 @@ GameObject:
   - component: {fileID: 9154836730830747635}
   - component: {fileID: 7793640797796401976}
   - component: {fileID: 6138472905164387251}
+  - component: {fileID: 1741518256015790140}
   m_Layer: 0
   m_Name: Flashlight
   m_TagString: KeepableObject
@@ -593,3 +594,16 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 65254291333519591, guid: a523a5644d614d043a8245091f4e9b64, type: 3}
   m_PrefabInstance: {fileID: 85211988866357302}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1741518256015790140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8271988315340836602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47eb2ced70b849868abac344bca4f206, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
+  allowedSlots: 3

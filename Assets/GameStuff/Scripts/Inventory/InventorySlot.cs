@@ -1,116 +1,318 @@
-using UnityEngine;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using Oculus.Interaction;
-using System.Collections; // Necesario para usar Corrutinas
+using UnityEngine;
 
+/// <summary>
+/// Punto físico de almacenamiento VR. Añade este componente a un collider
+/// trigger para crear otro bolsillo o soporte.
+/// </summary>
 [RequireComponent(typeof(Collider))]
 public class InventorySlot : MonoBehaviour
 {
-    [Header("Configuración del Slot")]
-    [Tooltip("El punto exacto donde se colocará el objeto. Puede ser este mismo GameObject.")]
-    public Transform snapPoint;
+    private static readonly HashSet<InventorySlot> ActiveSlots = new HashSet<InventorySlot>();
 
-    private GameObject currentItemInRange;
+    [Header("Punto de almacenamiento")]
+    [Tooltip("Bolsillo para objetos normales o soporte de hombro para los objetos autorizados en su componente InventoryItem.")]
+    [SerializeField] private InventorySlotKind slotKind = InventorySlotKind.Pocket;
+
+    [Tooltip("Punto donde se coloca el objeto. Si se deja vacío, se usa el Transform de este objeto.")]
+    [SerializeField] private Transform snapPoint;
+
+    [Tooltip("Ajuste local de posición del objeto guardado.")]
+    [SerializeField] private Vector3 snapPositionOffset;
+
+    [Tooltip("Ajuste local de rotación del objeto guardado; permite orientar la linterna hacia delante.")]
+    [SerializeField] private Vector3 snapRotationOffset;
+
+    [Tooltip("Solo se guardan objetos cuya raíz tenga esta etiqueta. Déjalo vacío para aceptar cualquier etiqueta.")]
+    [SerializeField] private string keepableTag = "KeepableObject";
+
+    private sealed class Candidate
+    {
+        public InventoryItem Item;
+        public GrabInteractable Interactable;
+        public Action<InteractableStateChangeArgs> StateChanged;
+        public bool StorePending;
+        public readonly HashSet<Collider> Colliders = new HashSet<Collider>();
+    }
+
+    private readonly Dictionary<GameObject, Candidate> candidates = new Dictionary<GameObject, Candidate>();
     private GameObject storedItem;
-    private GrabInteractable itemGrabInteractable;
+    private InventoryItem storedItemData;
+    private Rigidbody storedRigidbody;
+    private bool storedWasKinematic;
+
+    public InventorySlotKind SlotKind => slotKind;
 
     private void Awake()
     {
-        // Nos aseguramos de que el collider sea un trigger
         GetComponent<Collider>().isTrigger = true;
-        if (snapPoint == null) snapPoint = this.transform;
+        if (snapPoint == null)
+        {
+            snapPoint = transform;
+        }
+    }
+
+    private void OnEnable()
+    {
+        ActiveSlots.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        ActiveSlots.Remove(this);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // Si el slot está vacío y entra un objeto con nuestro Tag
-        if (other.CompareTag("KeepableObject") && storedItem == null)
+        if (other == null)
         {
-            // Obtenemos el objeto raíz (por si el collider está en un hijo)
-            currentItemInRange = other.attachedRigidbody ? other.attachedRigidbody.gameObject : other.gameObject;
-            
-            // Buscamos el componente de interacción del Meta SDK
-            itemGrabInteractable = currentItemInRange.GetComponentInChildren<GrabInteractable>();
-            if (itemGrabInteractable != null)
+            return;
+        }
+
+        GameObject itemRoot = ResolveItemRoot(other);
+        if (itemRoot == null || !HasKeepableTag(other, itemRoot))
+        {
+            return;
+        }
+
+        InventoryItem itemData = itemRoot.GetComponent<InventoryItem>();
+        if (itemData == null)
+        {
+            // Los objetos antiguos siguen funcionando como artículos de bolsillo.
+            // El componente también evita que dos slots reclamen el mismo objeto.
+            itemData = itemRoot.AddComponent<InventoryItem>();
+        }
+
+        if (!itemData.CanStoreIn(slotKind))
+        {
+            return;
+        }
+
+        GrabInteractable grabInteractable = itemRoot.GetComponentInChildren<GrabInteractable>(true);
+        if (grabInteractable == null)
+        {
+            return;
+        }
+
+        if (!candidates.TryGetValue(itemRoot, out Candidate candidate))
+        {
+            candidate = new Candidate
             {
-                itemGrabInteractable.WhenStateChanged += OnItemStateChanged;
-            }
+                Item = itemData,
+                Interactable = grabInteractable
+            };
+            GameObject capturedItem = itemRoot;
+            candidate.StateChanged = args => HandleItemStateChanged(capturedItem, args);
+            candidates.Add(itemRoot, candidate);
+            grabInteractable.WhenStateChanged += candidate.StateChanged;
+        }
+
+        candidate.Colliders.Add(other);
+
+        // También recoge objetos que entran en un bolsillo justo después de soltarlos.
+        if (grabInteractable.State != InteractableState.Select)
+        {
+            ScheduleStore(itemRoot, candidate);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        // Si el objeto sale del rango antes de soltarlo, cancelamos la detección
-        if (currentItemInRange != null && (other.gameObject == currentItemInRange || (other.attachedRigidbody != null && other.attachedRigidbody.gameObject == currentItemInRange)))
+        if (other == null)
         {
-            if (storedItem == null && itemGrabInteractable != null)
-            {
-                itemGrabInteractable.WhenStateChanged -= OnItemStateChanged;
-                itemGrabInteractable = null;
-                currentItemInRange = null;
-            }
+            return;
+        }
+
+        GameObject itemRoot = ResolveItemRoot(other);
+        if (itemRoot == null || !candidates.TryGetValue(itemRoot, out Candidate candidate))
+        {
+            return;
+        }
+
+        candidate.Colliders.Remove(other);
+        if (candidate.Colliders.Count == 0 && storedItem != itemRoot)
+        {
+            Unsubscribe(itemRoot, candidate);
         }
     }
 
-    private void OnItemStateChanged(InteractableStateChangeArgs args)
+    private void HandleItemStateChanged(GameObject item, InteractableStateChangeArgs args)
     {
-        // Si el jugador SUELTA el objeto dentro del slot
-        if (args.PreviousState == InteractableState.Select && args.NewState != InteractableState.Select)
+        if (args.NewState == InteractableState.Select)
         {
-            if (storedItem == null)
+            if (storedItem == item)
             {
-                // Iniciamos la corrutina para esperar al final del frame
-                StartCoroutine(StoreItemRoutine(currentItemInRange));
+                RemoveStoredItem();
             }
+
+            return;
         }
-        // Si el jugador VUELVE A AGARRAR el objeto ya guardado
-        else if (args.NewState == InteractableState.Select && storedItem == currentItemInRange)
+
+        if (args.PreviousState == InteractableState.Select && storedItem == null &&
+            candidates.TryGetValue(item, out Candidate candidate) && candidate.Colliders.Count > 0 &&
+            candidate.Item != null)
         {
-            RemoveItem();
+            ScheduleStore(item, candidate);
         }
     }
 
-    private IEnumerator StoreItemRoutine(GameObject item)
+    private void ScheduleStore(GameObject item, Candidate candidate)
     {
+        if (candidate.StorePending || storedItem != null)
+        {
+            return;
+        }
+
+        candidate.StorePending = true;
+        StartCoroutine(StoreItemAfterRelease(item, candidate));
+    }
+
+    private static InventorySlot FindPreferredSlot(GameObject item, InventoryItem itemData)
+    {
+        if (item == null || itemData == null || itemData.ReservedSlot != null)
+        {
+            return null;
+        }
+
+        InventorySlot bestSlot = null;
+        float bestDistance = float.PositiveInfinity;
+
+        foreach (InventorySlot slot in ActiveSlots)
+        {
+            if (slot == null || slot.storedItem != null || !itemData.CanStoreIn(slot.slotKind) ||
+                !slot.candidates.TryGetValue(item, out Candidate candidate) || candidate.Colliders.Count == 0)
+            {
+                continue;
+            }
+
+            float distance = (item.transform.position - slot.snapPoint.position).sqrMagnitude;
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestSlot = slot;
+            }
+        }
+
+        return bestSlot;
+    }
+
+    private IEnumerator StoreItemAfterRelease(GameObject item, Candidate pendingCandidate)
+    {
+        // Deja que el SDK termine el cálculo de la suelta y del lanzamiento.
+        yield return new WaitForFixedUpdate();
+
+        if (this == null)
+        {
+            yield break;
+        }
+
+        pendingCandidate.StorePending = false;
+        if (item == null || storedItem != null || pendingCandidate.Interactable == null ||
+            pendingCandidate.Interactable.State == InteractableState.Select ||
+            !candidates.TryGetValue(item, out Candidate candidate) || candidate != pendingCandidate ||
+            candidate.Colliders.Count == 0 || candidate.Item == null ||
+            FindPreferredSlot(item, candidate.Item) != this || !candidate.Item.TryReserveSlot(this))
+        {
+            yield break;
+        }
+
         storedItem = item;
-        
-        // Magia aquí: Esperamos a que Meta SDK termine de calcular y aplicar sus físicas de lanzamiento
-        yield return new WaitForSeconds(0.05f);;
-
-        // Verificamos que el objeto siga existiendo después de la pausa
-        if (storedItem != null)
+        storedItemData = candidate.Item;
+        storedRigidbody = item.GetComponent<Rigidbody>();
+        if (storedRigidbody != null)
         {
-            Rigidbody rb = storedItem.GetComponent<Rigidbody>();
-            if (rb != null) 
-            {
-                rb.isKinematic = true;
-                // Unity 6 usa linearVelocity en lugar del antiguo velocity, lo ponemos a 0 por seguridad
-                rb.linearVelocity = Vector3.zero; 
-                rb.angularVelocity = Vector3.zero;
-            }
+            storedWasKinematic = storedRigidbody.isKinematic;
+            storedRigidbody.isKinematic = true;
+            storedRigidbody.linearVelocity = Vector3.zero;
+            storedRigidbody.angularVelocity = Vector3.zero;
+        }
 
-            // Lo emparentamos y lo centramos en el slot
-            storedItem.transform.SetParent(snapPoint);
-            storedItem.transform.localPosition = Vector3.zero;
-            storedItem.transform.localRotation = Quaternion.identity;
+        item.transform.SetParent(snapPoint, false);
+        item.transform.localPosition = snapPositionOffset;
+        item.transform.localRotation = Quaternion.Euler(snapRotationOffset);
+    }
+
+    private void RemoveStoredItem()
+    {
+        GameObject item = storedItem;
+        InventoryItem itemData = storedItemData;
+        Rigidbody body = storedRigidbody;
+
+        storedItem = null;
+        storedItemData = null;
+        storedRigidbody = null;
+
+        if (itemData != null)
+        {
+            itemData.ReleaseSlot(this);
+        }
+
+        if (item != null)
+        {
+            item.transform.SetParent(null, true);
+            if (body != null)
+            {
+                body.isKinematic = storedWasKinematic;
+            }
+        }
+
+        if (item != null && candidates.TryGetValue(item, out Candidate candidate) && candidate.Colliders.Count == 0)
+        {
+            Unsubscribe(item, candidate);
         }
     }
 
-    private void RemoveItem()
+    private static GameObject ResolveItemRoot(Collider other)
     {
-        if (storedItem != null)
+        InventoryItem itemData = other.GetComponentInParent<InventoryItem>();
+        if (itemData != null)
         {
-            // Lo liberamos del parentesco. El PhysicsGrabbable de Meta reactivará sus físicas automáticamente
-            storedItem.transform.SetParent(null); 
-            storedItem = null;
+            return itemData.gameObject;
         }
+
+        if (other.attachedRigidbody != null)
+        {
+            return other.attachedRigidbody.gameObject;
+        }
+
+        return other.transform.root.gameObject;
+    }
+
+    private bool HasKeepableTag(Collider other, GameObject itemRoot)
+    {
+        return string.IsNullOrEmpty(keepableTag) || itemRoot.tag == keepableTag || other.tag == keepableTag;
+    }
+
+    private void Unsubscribe(GameObject item, Candidate candidate)
+    {
+        if (candidate.Interactable != null && candidate.StateChanged != null)
+        {
+            candidate.Interactable.WhenStateChanged -= candidate.StateChanged;
+        }
+
+        candidates.Remove(item);
     }
 
     private void OnDestroy()
     {
-        // Limpieza de eventos por seguridad
-        if (itemGrabInteractable != null)
+        ActiveSlots.Remove(this);
+
+        if (storedItem != null)
         {
-            itemGrabInteractable.WhenStateChanged -= OnItemStateChanged;
+            RemoveStoredItem();
         }
+
+        foreach (KeyValuePair<GameObject, Candidate> pair in candidates)
+        {
+            if (pair.Value.Interactable != null && pair.Value.StateChanged != null)
+            {
+                pair.Value.Interactable.WhenStateChanged -= pair.Value.StateChanged;
+            }
+        }
+
+        candidates.Clear();
     }
 }

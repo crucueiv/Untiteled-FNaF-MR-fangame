@@ -1,30 +1,42 @@
 using UnityEngine;
 
+/// <summary>
+/// Mantiene el inventario accesible alrededor de la cintura y el torso,
+/// siguiendo el giro horizontal de la cabeza.
+/// </summary>
 public class InventoryBodyFollower : MonoBehaviour
 {
     [Header("Referencias")]
-    [Tooltip("Arrastra aquí la cámara principal del jugador (CenterEyeAnchor).")]
+    [Tooltip("Cámara o ancla de la cabeza del jugador. Si se deja vacío, se usa MainCamera.")]
     public Transform headTransform;
 
-    [Header("Configuración")]
-    [Tooltip("Distancia hacia abajo desde la cabeza (ej. -0.4 para la cintura).")]
-    public float heightOffset = -0.4f;
-    [Tooltip("Velocidad a la que el inventario sigue al jugador.")]
-    public float smoothSpeed = 8f;
+    [Header("Posición del cuerpo")]
+    [Tooltip("Altura del rig de inventario respecto a la cabeza. La posición de los slots hijos define los bolsillos y el hombro.")]
+    public float heightOffset = -0.7f;
 
-    private void Update()
+    [Tooltip("Velocidad a la que sigue el inventario al torso. Valores mayores reducen el retraso al girar.")]
+    public float smoothSpeed = 12f;
+
+    private void Awake()
     {
-        if (headTransform == null) return;
+        if (headTransform == null && Camera.main != null)
+        {
+            headTransform = Camera.main.transform;
+        }
+    }
 
-        // Calculamos la posición: justo debajo de la cabeza
+    private void LateUpdate()
+    {
+        if (headTransform == null)
+        {
+            return;
+        }
+
         Vector3 targetPosition = headTransform.position + Vector3.up * heightOffset;
-        
-        // Calculamos la rotación: solo nos interesa la rotación en el eje Y (giro del cuerpo)
-        Vector3 euler = headTransform.eulerAngles;
-        Quaternion targetRotation = Quaternion.Euler(0, euler.y, 0);
+        Quaternion targetRotation = Quaternion.Euler(0f, headTransform.eulerAngles.y, 0f);
+        float followAmount = 1f - Mathf.Exp(-smoothSpeed * Time.deltaTime);
 
-        // Movemos el inventario de forma suave para evitar mareos
-        transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * smoothSpeed);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * smoothSpeed);
+        transform.position = Vector3.Lerp(transform.position, targetPosition, followAmount);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, followAmount);
     }
 }
