@@ -31,6 +31,12 @@ public sealed class FnafMenuController : MonoBehaviour
     [Tooltip("Ruta de Build Settings sin la extensión .unity.")]
     public string gameScenePath = "Assets/GameStuff/TestScenes/InitialTestRoom";
 
+    [Header("Encendido de la pantalla")]
+    [Tooltip("Duración del efecto de encendido del monitor al aparecer el menú")]
+    public float powerOnDuration = 0.32f;
+    [Tooltip("Escala inicial del panel antes de crecer hasta su tamaño final")]
+    public float powerOnStartScale = 0.84f;
+
     private MenuScreen screen = MenuScreen.Splash;
     private Coroutine transitionRoutine;
 
@@ -65,6 +71,7 @@ public sealed class FnafMenuController : MonoBehaviour
         if (screen != MenuScreen.Splash)
             return;
 
+        Debug.Log("[FnafMenuController] Encendiendo la pantalla del menú principal.");
         BeginTransition(mainMenuPanel, MenuScreen.Main);
     }
 
@@ -73,7 +80,8 @@ public sealed class FnafMenuController : MonoBehaviour
         if (screen != MenuScreen.Main)
             return;
 
-        BeginTransition(settingsPanel, MenuScreen.Settings);
+        // Ajustes todavía no tiene pantalla propia: por ahora solo avisa.
+        Debug.Log("[FnafMenuController] Ajustes: todavía no implementado (no lleva a ninguna pantalla).");
     }
 
     public void BackToMainMenu()
@@ -89,6 +97,7 @@ public sealed class FnafMenuController : MonoBehaviour
         if (screen != MenuScreen.Main || transitionRoutine != null)
             return;
 
+        Debug.Log("[FnafMenuController] Jugar -> " + gameScenePath);
         transitionRoutine = StartCoroutine(LoadGame());
     }
 
@@ -97,6 +106,7 @@ public sealed class FnafMenuController : MonoBehaviour
         if (screen != MenuScreen.Main || transitionRoutine != null)
             return;
 
+        Debug.Log("[FnafMenuController] Salir del juego.");
         transitionRoutine = StartCoroutine(QuitGame());
     }
 
@@ -118,9 +128,38 @@ public sealed class FnafMenuController : MonoBehaviour
         SetPanel(mainMenuPanel, target == mainMenuPanel);
         SetPanel(settingsPanel, target == settingsPanel);
 
+        if (target == mainMenuPanel)
+            yield return PowerOn(mainMenuPanel);
+
         yield return FadeOverlay(1f, 0f, 0.2f);
         screen = targetScreen;
         transitionRoutine = null;
+    }
+
+    /// <summary>
+    /// Efecto "se enciende el monitor": el panel crece ligeramente mientras aparece.
+    /// </summary>
+    private IEnumerator PowerOn(CanvasGroup panel)
+    {
+        if (panel == null)
+            yield break;
+
+        Transform tr = panel.transform;
+        Vector3 finalScale = Vector3.one;
+        float elapsed = 0f;
+
+        while (elapsed < powerOnDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / powerOnDuration);
+            float eased = 1f - Mathf.Pow(1f - t, 3f);
+            panel.alpha = eased;
+            tr.localScale = Vector3.one * Mathf.Lerp(powerOnStartScale, 1f, eased);
+            yield return null;
+        }
+
+        panel.alpha = 1f;
+        tr.localScale = finalScale;
     }
 
     private IEnumerator LoadGame()
@@ -129,7 +168,11 @@ public sealed class FnafMenuController : MonoBehaviour
         SetAllPanelsInteractable(false);
         yield return FadeOverlay(0f, 1f, 0.24f);
 
-        if (!Application.CanStreamedLevelBeLoaded(gameScenePath))
+        // Application.CanStreamedLevelBeLoaded solo acepta la ruta exacta del Build Settings
+        // (con ".unity") o el nombre de la escena; se prueban ambas variantes.
+        string scenePath = ResolveScenePath(gameScenePath);
+
+        if (scenePath == null)
         {
             Debug.LogError("No se puede cargar la escena de juego. Comprueba que esté habilitada en Build Settings: " + gameScenePath);
             SetPanel(mainMenuPanel, true);
@@ -141,10 +184,10 @@ public sealed class FnafMenuController : MonoBehaviour
             yield break;
         }
 
-        AsyncOperation load = SceneManager.LoadSceneAsync(gameScenePath, LoadSceneMode.Single);
+        AsyncOperation load = SceneManager.LoadSceneAsync(scenePath, LoadSceneMode.Single);
         if (load == null)
         {
-            Debug.LogError("Unity no pudo iniciar la carga de la escena: " + gameScenePath);
+            Debug.LogError("Unity no pudo iniciar la carga de la escena: " + scenePath);
             screen = MenuScreen.Main;
             transitionRoutine = null;
             yield break;
@@ -152,6 +195,27 @@ public sealed class FnafMenuController : MonoBehaviour
 
         while (!load.isDone)
             yield return null;
+    }
+
+    /// <summary>
+    /// Devuelve una ruta que Unity puede cargar, o null si la escena no está en Build Settings.
+    /// </summary>
+    private static string ResolveScenePath(string configuredPath)
+    {
+        if (string.IsNullOrWhiteSpace(configuredPath))
+            return null;
+
+        string withExtension = configuredPath.EndsWith(".unity", System.StringComparison.OrdinalIgnoreCase)
+            ? configuredPath
+            : configuredPath + ".unity";
+
+        if (Application.CanStreamedLevelBeLoaded(withExtension))
+            return withExtension;
+
+        if (Application.CanStreamedLevelBeLoaded(configuredPath))
+            return configuredPath;
+
+        return null;
     }
 
     private IEnumerator QuitGame()

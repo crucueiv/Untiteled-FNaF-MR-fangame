@@ -3,6 +3,13 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.XR;
 
+/// <summary>
+/// Entrada del menú de FNaF en VR (Meta Quest).
+/// - Splash: avanza al pulsar CUALQUIER botón físico del mando (los toques capacitivos y la
+///   inclinación del stick no cuentan).
+/// - Menú: cada mando emite un láser (LineRenderer) que apunta a los botones y también se
+///   pueden pulsar llevando el mando/la mano físicamente contra la pantalla (poke).
+/// </summary>
 public sealed class FnafMenuInput : MonoBehaviour
 {
     private enum PointerSide
@@ -12,6 +19,7 @@ public sealed class FnafMenuInput : MonoBehaviour
         Right
     }
 
+    [Header("Referencias")]
     public FnafMenuController menu;
     public Camera viewCamera;
     public Transform leftPointer;
@@ -20,12 +28,47 @@ public sealed class FnafMenuInput : MonoBehaviour
     public Transform reticle;
     public LayerMask buttonLayer;
     public float rayDistance = 8f;
+
+    [Header("Láser")]
+    public bool showLaser = true;
+    public float laserWidth = 0.006f;
+    public Color laserIdleColor = new Color(1f, 0.22f, 0.16f, 0.55f);
+    public Color laserHitColor = new Color(1f, 0.62f, 0.16f, 0.95f);
+
+    [Header("Poke (contacto físico)")]
+    public float pokeForwardOffset = 0.075f;
+    public float pokeRadius = 0.032f;
+    public float pokeCooldown = 0.35f;
+
+    [Header("Editor")]
     public bool allowEditorMouseFallback = true;
 
     private Button hoveredButton;
     private PointerSide hoveredPointerSide;
     private MaterialPropertyBlock reticleProperties;
     private Renderer reticleRenderer;
+    private LineRenderer leftLaser;
+    private LineRenderer rightLaser;
+    private Button leftTouchingButton;
+    private Button rightTouchingButton;
+    private float leftCooldown;
+    private float rightCooldown;
+
+    private static readonly OVRInput.Button[] PhysicalButtons =
+    {
+        OVRInput.Button.One,
+        OVRInput.Button.Two,
+        OVRInput.Button.Three,
+        OVRInput.Button.Four,
+        OVRInput.Button.PrimaryIndexTrigger,
+        OVRInput.Button.SecondaryIndexTrigger,
+        OVRInput.Button.PrimaryHandTrigger,
+        OVRInput.Button.SecondaryHandTrigger,
+        OVRInput.Button.PrimaryThumbstick,
+        OVRInput.Button.SecondaryThumbstick,
+        OVRInput.Button.Start,
+        OVRInput.Button.Back,
+    };
 
     private void Awake()
     {
@@ -44,173 +87,227 @@ public sealed class FnafMenuInput : MonoBehaviour
             rightPointer = FindTransform("RightControllerAnchor");
 
         if (leftPointer == null && rightPointer == null)
-            Debug.LogError("FnafMenuInput: no se encontró ningún ancla de controlador para el raycast del menú.");
+            Debug.LogError("[FnafMenuInput] No se encontró ningún ancla de controlador (Left/RightControllerAnchor) para el láser del menú.");
+        else
+            Debug.Log($"[FnafMenuInput] Punteros listos: left={(leftPointer != null ? leftPointer.name : "-")} right={(rightPointer != null ? rightPointer.name : "-")}");
 
         if (reticle != null)
             reticleRenderer = reticle.GetComponentInChildren<Renderer>();
+
+        leftLaser = CreateLaser("Left Laser", laserIdleColor);
+        rightLaser = CreateLaser("Right Laser", laserIdleColor);
     }
 
     private void Update()
     {
-        if (menu == null || viewCamera == null)
+        if (menu == null)
             return;
-
-        if (XRSettings.isDeviceActive && leftPointer == null && rightPointer == null)
-        {
-            ClearHoveredButton();
-            if (reticle != null)
-                reticle.gameObject.SetActive(false);
-            return;
-        }
 
         if (menu.IsSplash)
         {
+            SetLaserVisible(leftLaser, false);
+            SetLaserVisible(rightLaser, false);
             ClearHoveredButton();
-            PointerSide splashPointer = ChoosePointerSide();
-            Ray splashRay = GetRay(splashPointer);
-            PlaceReticle(splashRay, 2.45f, false, true);
-            if (ReadTriggerDown(splashPointer))
+            PlaceReticleVisible(false);
+            leftTouchingButton = null;
+            rightTouchingButton = null;
+
+            if (AnyPhysicalButtonPressed())
+            {
+                Debug.Log("[FnafMenuInput] Botón físico detectado: saliendo del splash.");
                 menu.ShowMainMenu();
+            }
             return;
         }
 
         if (!menu.CanSelect)
         {
+            SetLaserVisible(leftLaser, false);
+            SetLaserVisible(rightLaser, false);
             ClearHoveredButton();
-            if (reticle != null)
-                reticle.gameObject.SetActive(false);
+            PlaceReticleVisible(false);
             return;
         }
 
-        PointerSide pointerSide = ChoosePointerSide(out Ray ray, out RaycastHit hit, out Button candidate);
-        if (candidate != null && candidate.isActiveAndEnabled && candidate.IsInteractable())
+        // se recalcula el hover cada frame para que no se quede pegado a un botón
+        ClearHoveredButton();
+
+        UpdatePointer(PointerSide.Left, leftPointer, leftLaser, ref leftTouchingButton, ref leftCooldown);
+        UpdatePointer(PointerSide.Right, rightPointer, rightLaser, ref rightTouchingButton, ref rightCooldown);
+
+        if (!menu.CanSelect)
+            return;
+
+        if (ReadSelectPressed(hoveredPointerSide) && hoveredButton != null && hoveredButton.IsInteractable())
         {
-            SetHoveredButton(candidate);
-            hoveredPointerSide = pointerSide;
-            PlaceReticle(ray, hit.point, hit.normal, true, true);
+            Debug.Log("[FnafMenuInput] Pulsando botón con el láser: " + hoveredButton.name);
+            PressButton(hoveredButton);
+        }
+
+        if (allowEditorMouseFallback && !XRSettings.isDeviceActive && Mouse.current != null &&
+            Mouse.current.leftButton.wasPressedThisFrame && hoveredButton != null)
+        {
+            Debug.Log("[FnafMenuInput] Click de ratón sobre: " + hoveredButton.name);
+            PressButton(hoveredButton);
+        }
+    }
+
+    private void UpdatePointer(PointerSide side, Transform pointer, LineRenderer laser, ref Button touchingButton, ref float cooldown)
+    {
+        if (pointer == null)
+        {
+            SetLaserVisible(laser, false);
+            return;
+        }
+
+        if (cooldown > 0f)
+            cooldown -= Time.unscaledDeltaTime;
+
+        Ray ray = new Ray(pointer.position, pointer.forward);
+        bool hitSomething = Physics.Raycast(ray, out RaycastHit hit, rayDistance, buttonLayer, QueryTriggerInteraction.Collide);
+        Button hitButton = hitSomething ? hit.collider.GetComponentInParent<Button>() : null;
+        bool validButton = hitButton != null && hitButton.isActiveAndEnabled && hitButton.IsInteractable();
+
+        // --- Láser visual ---
+        if (showLaser)
+        {
+            SetLaserVisible(laser, true);
+            Vector3 end = hitSomething ? hit.point : ray.origin + ray.direction * rayDistance;
+            laser.SetPosition(0, ray.origin);
+            laser.SetPosition(1, end);
+            Color color = validButton ? laserHitColor : laserIdleColor;
+            laser.startColor = color;
+            laser.endColor = new Color(color.r, color.g, color.b, color.a * 0.35f);
+            laser.widthMultiplier = validButton ? laserWidth * 1.6f : laserWidth;
         }
         else
         {
-            ClearHoveredButton();
-            PlaceReticle(ray, ray.origin + ray.direction * 2.45f, -ray.direction, false, true);
+            SetLaserVisible(laser, false);
         }
 
-        if (ReadTriggerDown(hoveredPointerSide) && hoveredButton != null && hoveredButton.IsInteractable())
-            hoveredButton.onClick.Invoke();
-    }
-
-    private PointerSide ChoosePointerSide()
-    {
-        return ChoosePointerSide(out _, out _, out _);
-    }
-
-    private PointerSide ChoosePointerSide(out Ray selectedRay, out RaycastHit selectedHit, out Button selectedButton)
-    {
-        selectedRay = GetFallbackRay();
-        selectedHit = default;
-        selectedButton = null;
-
-        PointerSide bestSide = PointerSide.None;
-        float bestScore = float.NegativeInfinity;
-        bool foundButton = false;
-
-        EvaluatePointer(PointerSide.Left, leftPointer, ref bestSide, ref bestScore, ref foundButton, ref selectedRay, ref selectedHit, ref selectedButton);
-        EvaluatePointer(PointerSide.Right, rightPointer, ref bestSide, ref bestScore, ref foundButton, ref selectedRay, ref selectedHit, ref selectedButton);
-
-        if (bestSide != PointerSide.None)
-            return bestSide;
-
-        if (allowEditorMouseFallback && !XRSettings.isDeviceActive && Mouse.current != null)
+        // --- Poke: el mando/hand toca físicamente la pantalla ---
+        Vector3 pokePoint = pointer.position + pointer.forward * pokeForwardOffset;
+        Collider[] overlaps = Physics.OverlapSphere(pokePoint, pokeRadius, buttonLayer, QueryTriggerInteraction.Collide);
+        Button pokeButton = null;
+        foreach (var col in overlaps)
         {
-            selectedRay = GetFallbackRay();
-            if (Physics.Raycast(selectedRay, out selectedHit, rayDistance, buttonLayer, QueryTriggerInteraction.Collide))
+            var candidate = col.GetComponentInParent<Button>();
+            if (candidate != null && candidate.isActiveAndEnabled && candidate.IsInteractable())
             {
-                selectedButton = selectedHit.collider.GetComponentInParent<Button>();
-                if (selectedButton != null && selectedButton.isActiveAndEnabled && selectedButton.IsInteractable())
-                    return PointerSide.None;
+                pokeButton = candidate;
+                break;
             }
         }
 
-        return PointerSide.None;
-    }
-
-    private void EvaluatePointer(
-        PointerSide side,
-        Transform pointer,
-        ref PointerSide bestSide,
-        ref float bestScore,
-        ref bool foundButton,
-        ref Ray selectedRay,
-        ref RaycastHit selectedHit,
-        ref Button selectedButton)
-    {
-        if (pointer == null)
-            return;
-
-        Ray ray = new Ray(pointer.position, pointer.forward);
-        bool hit = Physics.Raycast(ray, out RaycastHit hitInfo, rayDistance, buttonLayer, QueryTriggerInteraction.Collide);
-        Button button = hit ? hitInfo.collider.GetComponentInParent<Button>() : null;
-        bool validButton = button != null && button.isActiveAndEnabled && button.IsInteractable();
-
-        Vector3 viewDirection = viewCamera.transform.forward;
-        float score = Vector3.Dot(viewDirection, ray.direction);
-        if (validButton)
-            score += 2f;
-
-        if ((validButton && !foundButton) || (validButton == foundButton && score > bestScore))
+        if (pokeButton != null && pokeButton != touchingButton && cooldown <= 0f)
         {
-            bestSide = side;
-            bestScore = score;
-            foundButton = validButton;
-            selectedRay = ray;
-            selectedHit = hitInfo;
-            selectedButton = validButton ? button : null;
+            cooldown = pokeCooldown;
+            Debug.Log($"[FnafMenuInput] Poke ({side}) sobre: {pokeButton.name}");
+            PressButton(pokeButton);
+        }
+        touchingButton = pokeButton;
+
+        // --- Hover (gana el mando que apunta mejor al botón) ---
+        float score = float.NegativeInfinity;
+        if (validButton && viewCamera != null)
+            score = Vector3.Dot(viewCamera.transform.forward, ray.direction) + 2f;
+        else if (validButton)
+            score = 2f;
+
+        if (validButton && score > lastScore)
+        {
+            lastScore = score;
+            hoveredPointerSide = side;
+            SetHoveredButton(hitButton);
+            PlaceReticleAt(hit.point, hit.normal, true);
+        }
+        else if (hoveredButton == null)
+        {
+            PlaceReticleAt(ray.origin + ray.direction * 1.4f, -ray.direction, false);
         }
     }
 
-    private Ray GetRay(PointerSide side)
+    private float lastScore = float.NegativeInfinity;
+
+    private bool AnyPhysicalButtonPressed()
     {
-        if (side == PointerSide.Left && leftPointer != null)
-            return new Ray(leftPointer.position, leftPointer.forward);
-
-        if (side == PointerSide.Right && rightPointer != null)
-            return new Ray(rightPointer.position, rightPointer.forward);
-
-        return GetFallbackRay();
-    }
-
-    private Ray GetFallbackRay()
-    {
-        if (allowEditorMouseFallback && !XRSettings.isDeviceActive && Mouse.current != null)
-            return viewCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
+        foreach (var button in PhysicalButtons)
+        {
+            if (OVRInput.GetDown(button, OVRInput.Controller.LTouch) ||
+                OVRInput.GetDown(button, OVRInput.Controller.RTouch))
+                return true;
+        }
 
         if (!XRSettings.isDeviceActive)
-            return viewCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-
-        return new Ray(Vector3.zero, Vector3.forward);
-    }
-
-    private bool ReadTriggerDown(PointerSide side)
-    {
-        if (side == PointerSide.Left && OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch))
-            return true;
-
-        if (side == PointerSide.Right && OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
-            return true;
-
-        if (side == PointerSide.None)
         {
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch))
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
                 return true;
-
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
+            if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame)
                 return true;
         }
 
-        return allowEditorMouseFallback &&
-               !XRSettings.isDeviceActive &&
-               Mouse.current != null &&
-               Mouse.current.leftButton.wasPressedThisFrame;
+        return false;
+    }
+
+    private bool ReadSelectPressed(PointerSide side)
+    {
+        bool pressed;
+        if (side == PointerSide.Left)
+            pressed = OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch) ||
+                      OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.LTouch);
+        else if (side == PointerSide.Right)
+            pressed = OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch) ||
+                      OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.RTouch);
+        else
+            pressed = OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch) ||
+                      OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch);
+
+        return pressed;
+    }
+
+    private void PressButton(Button button)
+    {
+        if (button == null)
+            return;
+
+        button.onClick.Invoke();
+    }
+
+    private LineRenderer CreateLaser(string name, Color color)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(transform, false);
+        var lr = go.AddComponent<LineRenderer>();
+        lr.useWorldSpace = true;
+        lr.positionCount = 2;
+        lr.widthMultiplier = laserWidth;
+        lr.numCapVertices = 4;
+        lr.alignment = LineAlignment.View;
+        lr.textureMode = LineTextureMode.Stretch;
+        lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        lr.receiveShadows = false;
+
+        // Sprites/Default multiplica el color de vértice, que es lo que LineRenderer usa para
+        // startColor/endColor. URP/Unlit lo ignora y el láser saldría blanco.
+        Shader shader = Shader.Find("Sprites/Default");
+        if (shader == null)
+            shader = Shader.Find("Universal Render Pipeline/Unlit");
+        var mat = new Material(shader) { name = "Menu Laser Material" };
+        if (mat.HasProperty("_Color"))
+            mat.SetColor("_Color", Color.white);
+        if (mat.HasProperty("_BaseColor"))
+            mat.SetColor("_BaseColor", Color.white);
+        lr.material = mat;
+
+        lr.startColor = color;
+        lr.endColor = new Color(color.r, color.g, color.b, color.a * 0.35f);
+        return lr;
+    }
+
+    private static void SetLaserVisible(LineRenderer laser, bool visible)
+    {
+        if (laser != null && laser.gameObject.activeSelf != visible)
+            laser.gameObject.SetActive(visible);
     }
 
     private void SetHoveredButton(Button next)
@@ -233,24 +330,27 @@ public sealed class FnafMenuInput : MonoBehaviour
 
         hoveredButton = null;
         hoveredPointerSide = PointerSide.None;
+        lastScore = float.NegativeInfinity;
     }
 
-    private void PlaceReticle(Ray ray, float distance, bool highlighted, bool visible)
-    {
-        PlaceReticle(ray, ray.origin + ray.direction * distance, -ray.direction, highlighted, visible);
-    }
-
-    private void PlaceReticle(Ray ray, Vector3 position, Vector3 normal, bool highlighted, bool visible)
+    private void PlaceReticleVisible(bool visible)
     {
         if (reticle == null)
             return;
 
-        reticle.gameObject.SetActive(visible);
-        if (!visible)
+        if (reticle.gameObject.activeSelf != visible)
+            reticle.gameObject.SetActive(visible);
+    }
+
+    private void PlaceReticleAt(Vector3 position, Vector3 normal, bool highlighted)
+    {
+        PlaceReticleVisible(true);
+        if (reticle == null)
             return;
 
-        reticle.position = position + normal.normalized * 0.012f;
-        reticle.rotation = Quaternion.LookRotation(normal.sqrMagnitude > 0f ? normal : -ray.direction);
+        Vector3 n = normal.sqrMagnitude > 0.0001f ? normal.normalized : Vector3.back;
+        reticle.position = position + n * 0.012f;
+        reticle.rotation = Quaternion.LookRotation(n);
 
         if (reticleRenderer != null)
         {
