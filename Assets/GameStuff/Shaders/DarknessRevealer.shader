@@ -6,14 +6,17 @@ Shader "Custom/MR_UltimateDarknessRevealer"
         _LightSensitivity ("Sensibilidad a la Luz", Range(0.1, 10)) = 2.0
         _TintStrength ("Fuerza del Tinte de Linterna", Range(0, 1)) = 0.5
         _CookieStrength ("Intensidad de la Cookie", Range(0, 5)) = 1.0
+        // NUEVO: 0 = ignora el angulo de la superficie (el cono se ve igual en suelo, techo y paredes)
+        //        1 = comportamiento anterior (NdotL completo)
+        _NdotLInfluence ("Influencia del angulo (NdotL)", Range(0, 1)) = 0.0
     }
     SubShader
     {
-        Tags 
-        { 
-            "RenderType"="Transparent" 
-            "Queue"="Transparent+100" 
-            "RenderPipeline"="UniversalPipeline" 
+        Tags
+        {
+            "RenderType"="Transparent"
+            "Queue"="Transparent+100"
+            "RenderPipeline"="UniversalPipeline"
         }
 
         Pass
@@ -21,7 +24,7 @@ Shader "Custom/MR_UltimateDarknessRevealer"
             Name "ForwardLit"
             Tags { "LightMode"="UniversalForward" }
 
-            Blend One OneMinusSrcAlpha 
+            Blend One OneMinusSrcAlpha
             ZWrite On
             ZTest LEqual
             Cull Back
@@ -29,7 +32,7 @@ Shader "Custom/MR_UltimateDarknessRevealer"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            
+
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
@@ -50,7 +53,7 @@ Shader "Custom/MR_UltimateDarknessRevealer"
                 float4 positionCS  : SV_POSITION;
                 float3 positionWS  : TEXCOORD0;
                 float3 normalWS    : TEXCOORD1;
-                float4 shadowCoord : TEXCOORD2; // ← NUEVO
+                float4 shadowCoord : TEXCOORD2;
             };
 
             CBUFFER_START(UnityPerMaterial)
@@ -58,21 +61,20 @@ Shader "Custom/MR_UltimateDarknessRevealer"
                 half _LightSensitivity;
                 half _TintStrength;
                 half _CookieStrength;
+                half _NdotLInfluence;
             CBUFFER_END
 
             Varyings vert(Attributes input)
             {
                 Varyings output;
 
-                // FIX 1: GetVertexPositionInputs + GetShadowCoord
-                // Maneja correctamente cascade shadows Y screen-space shadows de Unity 6
                 VertexPositionInputs posInputs = GetVertexPositionInputs(input.positionOS.xyz);
                 VertexNormalInputs   normInputs = GetVertexNormalInputs(input.normalOS);
 
                 output.positionCS  = posInputs.positionCS;
                 output.positionWS  = posInputs.positionWS;
                 output.normalWS    = normInputs.normalWS;
-                output.shadowCoord = GetShadowCoord(posInputs); // ← calcula aquí, no en fragment
+                output.shadowCoord = GetShadowCoord(posInputs);
                 return output;
             }
 
@@ -80,19 +82,20 @@ Shader "Custom/MR_UltimateDarknessRevealer"
             {
                 float3 normalWS = normalize(input.normalWS);
 
-                // FIX 1: shadowCoord viene del vertex shader
-                // La versión de 3 args también aplica la cookie de la luz principal
+                // En una pared de MRUK nos interesa "esta zona esta dentro del cono de luz",
+                // no "cuanto de perpendicular llega la luz". Por eso NdotL es opcional:
+                // con _NdotLInfluence = 0 el factor vale 1 y las esquinas de 90 grados
+                // ya no se oscurecen al apuntar desde arriba.
                 Light mainLight = GetMainLight(input.shadowCoord, input.positionWS, half4(1, 1, 1, 1));
-                half NdotL_main = saturate(dot(normalWS, mainLight.direction));
+                half NdotL_main = lerp(1.0h, saturate(dot(normalWS, mainLight.direction)), _NdotLInfluence);
                 half3 totalLightColor = mainLight.color
                     * (NdotL_main * mainLight.shadowAttenuation * mainLight.distanceAttenuation);
 
                 uint pixelLightCount = GetAdditionalLightsCount();
                 LIGHT_LOOP_BEGIN(pixelLightCount)
-                    // La versión con shadowMask activa sombras Y cookies correctamente
                     Light addLight = GetAdditionalLight(lightIndex, input.positionWS, half4(1, 1, 1, 1));
-                    half NdotL_add = saturate(dot(normalWS, addLight.direction));
-                    // addLight.color ya lleva la cookie aplicada cuando _LIGHT_COOKIES está activo
+                    half NdotL_add = lerp(1.0h, saturate(dot(normalWS, addLight.direction)), _NdotLInfluence);
+                    // En URP, distanceAttenuation de un foco ya incluye la atenuacion del cono
                     half3 addLightColor = addLight.color
                         * (NdotL_add * addLight.shadowAttenuation * addLight.distanceAttenuation)
                         * _CookieStrength;
@@ -102,26 +105,11 @@ Shader "Custom/MR_UltimateDarknessRevealer"
                 half lightIntensity  = Luminance(totalLightColor) * _LightSensitivity;
                 half darknessFactor  = saturate(1.0 - lightIntensity);
 
-                // FIX 2: Alpha premultiplicado correcto — sin color aditivo en zonas iluminadas
-                //
-                // ANTES: addedColor = lerp(totalLightColor * _TintStrength, _DarknessColor, darknessFactor)
-                //   → En zonas iluminadas (darknessFactor≈0, alpha≈0), Blend One OneMinusSrcAlpha
-                //     sumaba 'totalLightColor * _TintStrength' encima del mundo real → zona blanca.
-                //   → La cookie quedaba enmascarada por ese glow aditivo.
-                //
-                // AHORA: en zonas iluminadas el fragmento es 100% transparente (rgb=0, alpha=0).
-                //   La variación espacial de la cookie se convierte en variación de darknessFactor:
-                //   cookie abierta → luz → darknessFactor bajo → transparente (mundo real visible)
-                //   cookie cerrada → sin luz → darknessFactor alto → opaco negro
-                //   Eso ES el patrón de la cookie proyectado sobre la oscuridad.
                 half alpha = darknessFactor;
 
-                // Tinte opcional: sutil variación en la oscuridad según el color de la linterna,
-                // sin añadir brillo aditivo al mundo real
                 half3 finalRGB = _DarknessColor.rgb + totalLightColor * (_TintStrength * darknessFactor);
                 finalRGB = saturate(finalRGB);
 
-                // Alpha premultiplicado: rgb *= alpha  para que Blend One OneMinusSrcAlpha sea correcto
                 return half4(finalRGB * alpha, alpha);
             }
             ENDHLSL
