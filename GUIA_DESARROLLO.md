@@ -8,11 +8,11 @@ Esta guía deja el entorno reproducible para abrir, editar y probar **Untitled F
 |---|---|
 | Unity Editor | `6000.3.18f1` (Unity 6) |
 | Plataforma | Meta Quest sobre Android, ARM64 |
-| Meta XR SDK | `203.0.0` |
+| Meta XR SDK | `209.0.0` |
 | URP | `17.3.0` |
 | XR Interaction Toolkit | `3.4.1` |
-| Escena de desarrollo y compilación | `Assets/GameStuff/TestScenes/InitialTestRoom.unity` |
-| Escena de menú | `Assets/GameStuff/TestScenes/TestMenu.unity` (todavía no está incluida en la lista de compilación) |
+| Escenas habilitadas en compilación | `Assets/GameStuff/TestScenes/TestMenu.unity` y `Assets/GameStuff/TestScenes/InitialTestRoom.unity` |
+| Escena de showcase | `Assets/GameStuff/TestScenes/DriveCharacterShowcase.unity` (no habilitada) |
 
 La versión del editor está fijada en `ProjectSettings/ProjectVersion.txt`. Las dependencias directas están en `Packages/manifest.json` y las versiones resueltas en `Packages/packages-lock.json`. Conserva ambos archivos y abre el proyecto con esa versión exacta de Unity; abrirlo con otra versión puede actualizar archivos del proyecto y los paquetes.
 
@@ -48,7 +48,7 @@ En Unity Hub, pulsa **Add/Open** y selecciona la carpeta clonada (la que contien
 
 En la primera apertura Unity importará los assets y descargará las dependencias que figuran en el manifiesto. Espera a que termine la importación y a que desaparezcan los errores de Package Manager antes de editar escenas o scripts. El primer arranque puede tardar bastante más que los siguientes.
 
-Abre la escena de trabajo desde `Assets/GameStuff/TestScenes/InitialTestRoom.unity`. Esa escena es la única habilitada ahora mismo en **File > Build Profiles / Scene List**. `TestMenu.unity` existe en Assets, pero todavía no forma parte de la compilación.
+Abre `Assets/GameStuff/TestScenes/TestMenu.unity` para probar el flujo de menú o `Assets/GameStuff/TestScenes/InitialTestRoom.unity` para probar la escena MR. Ambas están habilitadas en **File > Build Profiles / Scene List**. `DriveCharacterShowcase.unity` existe como showcase, pero no está habilitada para compilación.
 
 ## 3. Preparar el Quest para pruebas
 
