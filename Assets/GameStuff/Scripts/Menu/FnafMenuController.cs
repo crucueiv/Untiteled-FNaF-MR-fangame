@@ -11,6 +11,7 @@ public sealed class FnafMenuController : MonoBehaviour
         Splash,
         Main,
         Settings,
+        SceneSelect,
         Transition
     }
 
@@ -18,6 +19,9 @@ public sealed class FnafMenuController : MonoBehaviour
     public CanvasGroup splashPanel;
     public CanvasGroup mainMenuPanel;
     public CanvasGroup settingsPanel;
+
+    [Tooltip("Pantalla con la lista de escenas que se pueden jugar.")]
+    public CanvasGroup sceneSelectPanel;
     public Image fadeOverlay;
     public TextMeshProUGUI pressPrompt;
 
@@ -27,8 +31,23 @@ public sealed class FnafMenuController : MonoBehaviour
     public Button exitButton;
     public Button backButton;
 
-    [Header("Escena de juego")]
-    [Tooltip("Ruta de Build Settings sin la extensión .unity.")]
+    [Tooltip("Boton \"Sala de pruebas (oscuridad)\" del selector de escena.")]
+    public Button testRoomButton;
+
+    [Tooltip("Boton \"Habitacion MR - Springbonnie\" del selector de escena.")]
+    public Button springBonnieButton;
+
+    [Tooltip("Boton \"Volver\" del selector de escena.")]
+    public Button sceneSelectBackButton;
+
+    [Header("Escenas de juego")]
+    [Tooltip("Ruta de Build Settings de la sala de pruebas a oscuras, sin la extension .unity.")]
+    public string testRoomScenePath = "Assets/GameStuff/TestScenes/InitialTestRoom";
+
+    [Tooltip("Ruta de Build Settings de la habitacion MR con Springbonnie, sin la extension .unity.")]
+    public string springBonnieScenePath = "Assets/GameStuff/Scenes/MR_SpringBonnieRoom";
+
+    [Tooltip("Escena que se carga si el selector no esta cableado (compatibilidad).")]
     public string gameScenePath = "Assets/GameStuff/TestScenes/InitialTestRoom";
 
     [Header("Encendido de la pantalla")]
@@ -41,7 +60,7 @@ public sealed class FnafMenuController : MonoBehaviour
     private Coroutine transitionRoutine;
 
     public bool IsSplash => screen == MenuScreen.Splash;
-    public bool CanSelect => screen == MenuScreen.Main || screen == MenuScreen.Settings;
+    public bool CanSelect => screen == MenuScreen.Main || screen == MenuScreen.Settings || screen == MenuScreen.SceneSelect;
 
     private void Awake()
     {
@@ -49,10 +68,14 @@ public sealed class FnafMenuController : MonoBehaviour
         if (settingsButton != null) settingsButton.onClick.AddListener(OpenSettings);
         if (exitButton != null) exitButton.onClick.AddListener(ExitGame);
         if (backButton != null) backButton.onClick.AddListener(BackToMainMenu);
+        if (sceneSelectBackButton != null) sceneSelectBackButton.onClick.AddListener(BackToMainMenu);
+        if (testRoomButton != null) testRoomButton.onClick.AddListener(SelectTestRoom);
+        if (springBonnieButton != null) springBonnieButton.onClick.AddListener(SelectSpringBonnieRoom);
 
         SetPanel(splashPanel, true);
         SetPanel(mainMenuPanel, false);
         SetPanel(settingsPanel, false);
+        SetPanel(sceneSelectPanel, false);
         SetFadeAlpha(0f);
         screen = MenuScreen.Splash;
     }
@@ -86,19 +109,52 @@ public sealed class FnafMenuController : MonoBehaviour
 
     public void BackToMainMenu()
     {
-        if (screen != MenuScreen.Settings)
+        if (screen != MenuScreen.Settings && screen != MenuScreen.SceneSelect)
             return;
 
         BeginTransition(mainMenuPanel, MenuScreen.Main);
     }
 
+    /// <summary>
+    /// "Iniciar" del menu principal: en vez de cargar directamente, abre el selector de escena.
+    /// </summary>
     public void StartGame()
     {
         if (screen != MenuScreen.Main || transitionRoutine != null)
             return;
 
-        Debug.Log("[FnafMenuController] Jugar -> " + gameScenePath);
-        transitionRoutine = StartCoroutine(LoadGame());
+        if (sceneSelectPanel == null)
+        {
+            // Sin selector cableado se mantiene el comportamiento anterior.
+            Debug.Log("[FnafMenuController] Jugar -> " + gameScenePath);
+            transitionRoutine = StartCoroutine(LoadGame(gameScenePath));
+            return;
+        }
+
+        Debug.Log("[FnafMenuController] Jugar -> selector de escena.");
+        BeginTransition(sceneSelectPanel, MenuScreen.SceneSelect);
+    }
+
+    /// <summary>Boton "Sala de pruebas (oscuridad)".</summary>
+    public void SelectTestRoom()
+    {
+        SelectScene(testRoomScenePath);
+    }
+
+    /// <summary>Boton "Habitacion MR - Springbonnie".</summary>
+    public void SelectSpringBonnieRoom()
+    {
+        SelectScene(springBonnieScenePath);
+    }
+
+    /// <summary>Carga la escena indicada desde el selector.</summary>
+    public void SelectScene(string scenePath)
+    {
+        if (screen != MenuScreen.SceneSelect || transitionRoutine != null)
+            return;
+
+        Debug.Log("[FnafMenuController] Selector -> " + scenePath);
+        transitionRoutine = StartCoroutine(LoadGame(scenePath));
     }
 
     public void ExitGame()
@@ -127,6 +183,7 @@ public sealed class FnafMenuController : MonoBehaviour
         SetPanel(splashPanel, target == splashPanel);
         SetPanel(mainMenuPanel, target == mainMenuPanel);
         SetPanel(settingsPanel, target == settingsPanel);
+        SetPanel(sceneSelectPanel, target == sceneSelectPanel);
 
         if (target == mainMenuPanel)
             yield return PowerOn(mainMenuPanel);
@@ -162,7 +219,7 @@ public sealed class FnafMenuController : MonoBehaviour
         tr.localScale = finalScale;
     }
 
-    private IEnumerator LoadGame()
+    private IEnumerator LoadGame(string configuredPath)
     {
         screen = MenuScreen.Transition;
         SetAllPanelsInteractable(false);
@@ -170,16 +227,20 @@ public sealed class FnafMenuController : MonoBehaviour
 
         // Application.CanStreamedLevelBeLoaded solo acepta la ruta exacta del Build Settings
         // (con ".unity") o el nombre de la escena; se prueban ambas variantes.
-        string scenePath = ResolveScenePath(gameScenePath);
+        string scenePath = ResolveScenePath(configuredPath);
 
         if (scenePath == null)
         {
-            Debug.LogError("No se puede cargar la escena de juego. Comprueba que esté habilitada en Build Settings: " + gameScenePath);
-            SetPanel(mainMenuPanel, true);
+            Debug.LogError("No se puede cargar la escena de juego. Comprueba que esté habilitada en Build Settings: " + configuredPath);
+
+            // Se vuelve al selector para poder elegir otra escena.
+            bool haySelector = sceneSelectPanel != null;
+            SetPanel(sceneSelectPanel, haySelector);
+            SetPanel(mainMenuPanel, !haySelector);
             SetPanel(splashPanel, false);
             SetPanel(settingsPanel, false);
             yield return FadeOverlay(1f, 0f, 0.18f);
-            screen = MenuScreen.Main;
+            screen = haySelector ? MenuScreen.SceneSelect : MenuScreen.Main;
             transitionRoutine = null;
             yield break;
         }
@@ -264,6 +325,7 @@ public sealed class FnafMenuController : MonoBehaviour
         SetInteractable(splashPanel, interactable);
         SetInteractable(mainMenuPanel, interactable);
         SetInteractable(settingsPanel, interactable);
+        SetInteractable(sceneSelectPanel, interactable);
     }
 
     private static void SetInteractable(CanvasGroup panel, bool interactable)

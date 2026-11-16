@@ -209,7 +209,7 @@ public class MRSpawnerReworked : MonoBehaviour
     /// convirtiendo la dirección mundo deseada al índice de cara local.
     /// 0=front(+Z)  1=back(-Z)  2=right(+X)  3=left(-X)  4=top(+Y)  5=bottom(-Y)
     /// </summary>
-    private int GetFaceIndex(MRUKAnchor anchor)
+    public static int GetFaceIndex(MRUKAnchor anchor)
     {
         if ((anchor.Label & TopSurfaceLabels) != 0)
             // Mesa, suelo, cama, sofá → queremos la cara que mira hacia arriba en el mundo
@@ -224,10 +224,42 @@ public class MRSpawnerReworked : MonoBehaviour
     }
 
     /// <summary>
+    /// Devuelve los bounds del ancla EN SU ESPACIO LOCAL (X/Y/Z del anchor).
+    /// Prioriza VolumeBounds y, si el ancla solo tiene plano (por ejemplo una room
+    /// cargada desde prefab), usa el PlaneRect aplanado en Z. Sirve para colocar
+    /// objetos sin asumir que la Y del ancla es la vertical del mundo.
+    /// </summary>
+    public static bool TryGetLocalBounds(MRUKAnchor anchor, out Bounds bounds)
+    {
+        bounds = default;
+        if (anchor == null)
+        {
+            return false;
+        }
+
+        if (anchor.VolumeBounds.HasValue)
+        {
+            bounds = anchor.VolumeBounds.Value;
+            return true;
+        }
+
+        if (anchor.PlaneRect.HasValue)
+        {
+            Rect rect = anchor.PlaneRect.Value;
+            bounds = new Bounds(
+                new Vector3(rect.center.x, rect.center.y, 0f),
+                new Vector3(rect.width, rect.height, 0f));
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Proyecta una dirección mundo al espacio local del anchor y devuelve
     /// el índice de la cara cuyo eje local mejor se alinea con ella.
     /// </summary>
-    private int WorldDirectionToFaceIndex(MRUKAnchor anchor, Vector3 worldDir)
+    public static int WorldDirectionToFaceIndex(MRUKAnchor anchor, Vector3 worldDir)
     {
         Vector3 local = anchor.transform.InverseTransformDirection(worldDir.normalized);
         float ax = Mathf.Abs(local.x);

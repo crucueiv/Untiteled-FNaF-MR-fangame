@@ -78,7 +78,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Meta.XR.BuildingBlocks::Meta.XR.BuildingBlocks.BuildingBlock
   blockId: f8766c17-aaf8-4b55-9431-de8deea83842
-  instanceId: c0adaa4a-d3e7-43af-a0b1-2d919afdc067
+  instanceId: 2185aaf1-82d7-4a69-9409-5ec442adcb25
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: f8338144-8280-4ff6-9455-ae2bb9c20fe8
@@ -164,6 +164,7 @@ GameObject:
   - component: {fileID: 3944188372020641965}
   - component: {fileID: 7085999787604921639}
   - component: {fileID: 6727063597440989755}
+  - component: {fileID: 5941142605601235501}
   m_Layer: 0
   m_Name: GrabbableObject
   m_TagString: KeepableObject
@@ -201,7 +202,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Meta.XR.BuildingBlocks::Meta.XR.BuildingBlocks.BuildingBlock
   blockId: 7358e191-33b7-43ca-b066-b2f00531ac66
-  instanceId: 73cc5bf5-0219-4bae-817e-4191030bbea5
+  instanceId: 0fa9b37d-f482-492e-b01d-558c6d6ac760
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 
@@ -359,6 +360,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 47eb2ced70b849868abac344bca4f206, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   allowedSlots: 1
+--- !u!114 &5941142605601235501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9005288814132815609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a288e7856a986bb4db1600604f2a5020, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InteractableHighlight
+  outlineColor: {r: 0.25, g: 0.85, b: 1, a: 1}
+  outlineWidth: 0.012
+  pulsar: 1
+  pulseSpeed: 2.5
+  pulseMin: 0.35
+  mostrarAlActivar: 1
+  ocultarAlPrimerAgarre: 1
+  outlineMaterial: {fileID: 0}

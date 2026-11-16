@@ -262,6 +262,7 @@ GameObject:
   - component: {fileID: 7793640797796401976}
   - component: {fileID: 6138472905164387251}
   - component: {fileID: 1741518256015790140}
+  - component: {fileID: 4868104062281669270}
   m_Layer: 0
   m_Name: Flashlight
   m_TagString: KeepableObject
@@ -459,7 +460,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1fc4e247994c46459d7c3df3dba91ec9, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabbedObjectButton
   button: 32768
   onButtonPressed:
@@ -474,9 +475,42 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument:
+          m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &1741518256015790140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8271988315340836602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47eb2ced70b849868abac344bca4f206, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
+  allowedSlots: 3
+--- !u!114 &4868104062281669270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8271988315340836602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a288e7856a986bb4db1600604f2a5020, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InteractableHighlight
+  outlineColor: {r: 0.25, g: 0.85, b: 1, a: 1}
+  outlineWidth: 0.012
+  pulsar: 1
+  pulseSpeed: 2.5
+  pulseMin: 0.35
+  mostrarAlActivar: 1
+  ocultarAlPrimerAgarre: 1
+  outlineMaterial: {fileID: 0}
 --- !u!1 &9048023248202824644
 GameObject:
   m_ObjectHideFlags: 0
@@ -594,16 +628,3 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 65254291333519591, guid: a523a5644d614d043a8245091f4e9b64, type: 3}
   m_PrefabInstance: {fileID: 85211988866357302}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1741518256015790140
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8271988315340836602}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 47eb2ced70b849868abac344bca4f206, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
-  allowedSlots: 3
