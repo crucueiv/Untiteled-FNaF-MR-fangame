@@ -2,8 +2,16 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
+/// <summary>
+/// Herramienta de diagnóstico para inspeccionar y reportar las posiciones angulares y distancias de los targets IK
+/// en la escena de showcase de animatrónicos.
+/// </summary>
 public static class ProbeDriveTargets
 {
+    /// <summary>
+    /// Ejecuta el sondeo de targets IK (LookAtTarget, Head, Neck) en los personajes de la escena DriveCharacterShowcase y devuelve un reporte formateado.
+    /// </summary>
+    /// <returns>Cadena con los datos de escala, posición y ángulos por personaje.</returns>
     public static string Execute()
     {
         var showcase = GameObject.Find("DriveCharacterShowcase");

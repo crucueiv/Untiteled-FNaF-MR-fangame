@@ -1,5 +1,9 @@
 using UnityEngine;
 
+/// <summary>
+/// Controla la visibilidad del menú de depuración en realidad virtual.
+/// Alterna el estado activo de un Canvas flotante al presionar el botón Start del controlador izquierdo (LTouch).
+/// </summary>
 public class DebuggerHandToggle : MonoBehaviour
 {
     [Header("Referencia al Menú")]
