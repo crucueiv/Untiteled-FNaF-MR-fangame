@@ -1,3 +1,4 @@
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using System.Text;
 using Meta.XR.EnvironmentDepth;
 using UnityEngine;
@@ -623,3 +624,4 @@ public sealed class MRDebugOverlay : MonoBehaviour
         }
     }
 }
+#endif
