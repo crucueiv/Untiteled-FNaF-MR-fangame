@@ -8,7 +8,7 @@ Restauración: etiqueta `restore-before-audit-2026-11-18` (`7b3c9fd`)
 
 El historial atribuye al usuario los cambios de `b542142` y `1da21a0`, pero Git no identifica qué herramienta produjo cada archivo. La auditoría toma esos commits como el lote de cambios MR a revisar y contrasta sus referencias con las escenas, prefabs y scripts actuales.
 
-Antes de editar ya había modificaciones locales en las instrucciones `.codex`, `.vscode/settings.json`, `MR_SpringBonnieRoom.unity`, ajustes XR, `Packages/`, `ProjectSettings/` y el `.slnx`, además de archivos sin seguimiento de Roslyn, XR APILayers y ProBuilder. Se conservaron fuera de los commits de esta auditoría. No se tocaron `Packages/`, `Library/`, activos Meta de terceros ni ajustes globales del proyecto.
+Antes de editar ya había modificaciones locales en las instrucciones `.codex`, `.vscode/settings.json`, `MR_SpringBonnieRoom.unity`, ajustes XR, `Packages/` y el `.slnx`, además de archivos sin seguimiento de Roslyn, XR APILayers y ProBuilder. Se conservaron fuera de los commits de esta auditoría. No se editaron manualmente `Packages/`, `Library/`, activos Meta de terceros ni ajustes globales del proyecto. Al lanzar el build, Unity modificó por sí mismo `ProjectSettings/ProjectSettings.asset` y creó los archivos temporales descritos en «Verificación»; todavía no se han limpiado porque el build continúa bloqueando el Editor.
 
 ## Inventario y veredictos
 
