@@ -23,6 +23,9 @@ public class MRSpawnerReworked : MonoBehaviour
     [Tooltip("Distancia mínima que el objeto mantiene de la superficie para no hundirse.")]
     public float surfacePadding = 0.05f;
 
+    [Tooltip("Margen sobre la superficie detectada por raycast. La capa de oscuridad (DarknessRevealer) es negra y escribe profundidad: un objeto hundido en la malla de MRUK sale negro puro y sin contorno.")]
+    public float surfaceClearance = MRSurfacePlacement.DefaultClearance;
+
     [Tooltip("Margen que el objeto mantiene respecto a los bordes para no caerse. 0.1m recomendado.")]
     public float borderMargin = 0.1f;
 
@@ -154,7 +157,15 @@ public class MRSpawnerReworked : MonoBehaviour
 
         Vector3 worldPos = anchor.transform.TransformPoint(localPos);
         Quaternion worldRot = anchor.transform.rotation * localFaceRot * Quaternion.Euler(rotationOffset);
-        Instantiate(prefabToSpawn, worldPos, worldRot);
+        GameObject instance = Instantiate(prefabToSpawn, worldPos, worldRot);
+
+        // La cara superior se apoya con margen sobre la superficie real para que la capa de oscuridad
+        // no tape el objeto.
+        if (face == 4)
+        {
+            float surfaceHeight;
+            MRSurfacePlacement.TrySnapToSurfaceBelow(instance, worldPos + Vector3.up * 0.5f, surfaceClearance, 3f, out surfaceHeight);
+        }
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -197,7 +208,14 @@ public class MRSpawnerReworked : MonoBehaviour
             baseRot = Quaternion.LookRotation(surfaceNormal, projUp);
         }
 
-        Instantiate(prefabToSpawn, worldPos, baseRot * Quaternion.Euler(rotationOffset));
+        GameObject instance = Instantiate(prefabToSpawn, worldPos, baseRot * Quaternion.Euler(rotationOffset));
+
+        // En superficies horizontales (suelo, mesa como plano puro) el objeto se apoya con margen.
+        if (isHorizontal)
+        {
+            float surfaceHeight;
+            MRSurfacePlacement.TrySnapToSurfaceBelow(instance, worldPos + Vector3.up * 0.5f, surfaceClearance, 3f, out surfaceHeight);
+        }
     }
 
     // ─────────────────────────────────────────────────────────────

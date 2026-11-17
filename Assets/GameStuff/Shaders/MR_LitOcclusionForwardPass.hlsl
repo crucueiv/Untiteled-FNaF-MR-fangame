@@ -12,8 +12,8 @@
 // Meta Depth API: META_DEPTH_GET_OCCLUSION_VALUE_WORLDPOS (1 = visible, 0 = tapado por el entorno).
 #include "Packages/com.meta.xr.sdk.core/Shaders/EnvironmentDepth/URP/EnvironmentOcclusionURP.hlsl"
 
-// Bias de profundidad global (lo fija MRDepthOcclusionController). Fuera del CBUFFER a proposito.
-float _EnvironmentDepthBias;
+// MR_ApplyOcclusion + _EnvironmentDepthBias + _MR_OcclusionMode (globales, ver MR_Lighting.hlsl).
+#include "MR_Lighting.hlsl"
 
 #if defined(LOD_FADE_CROSSFADE)
     #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
@@ -234,13 +234,12 @@ void LitPassFragmentSimple(
     color.a = OutputAlpha(color.a, IsSurfaceTypeTransparent(_Surface));
 
     // ---------- Oclusion por profundidad (manos y mandos reales) ----------
-    // clip(): el pixel tapado por la mano real no escribe profundidad, asi la capa de oscuridad
-    // (DarknessRevealer) tambien oscurece la mano en vez de dejar un parche claro sin oscurecer.
-    #if defined(HARD_OCCLUSION) || defined(SOFT_OCCLUSION)
-        const half occlusion = (half)META_DEPTH_GET_OCCLUSION_VALUE_WORLDPOS(input.positionWS, _EnvironmentDepthBias);
-        clip(occlusion - 0.01h);
-        color *= occlusion;
-    #endif
+    // Dos modos conmutables con el global _MR_OcclusionMode (ver MR_Lighting.hlsl):
+    //  - dither (defecto): color intacto, se descartan pixeles contra un umbral con ruido. Asi
+    //    desaparece el fleco oscuro que dejaba la transicion de la oclusion suave sobre el brazo.
+    //  - premultiplicado: color y alfa multiplicados por la oclusion (comportamiento anterior).
+    // Estos materiales no tienen propiedad _DepthOcclusion: siempre son ocluibles (mascara 1).
+    MR_ApplyOcclusion(input.positionWS, input.positionCS.xy, 1.0h, color.rgb, color.a);
 
     outColor = color;
 

@@ -1863,7 +1863,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8f7a7b4a7bf27d4d96b8eb673f5174e, type: 3}
   m_Name: OculusTouchControllerProximityProfile Android
   m_EditorClassIdentifier: Oculus.VR::Meta.XR.OculusTouchControllerProximityProfile
-  m_enabled: 0
+  m_enabled: 1
   nameUi: Oculus Touch Controller Proximity Interaction
   version: 0.0.1
   featureIdInternal: com.meta.openxr.feature.input.oculustouch.proximity
@@ -3302,8 +3302,10 @@ MonoBehaviour:
   - {fileID: -6196481894155685051}
   - {fileID: 7090655130217411678}
   - {fileID: -1870992794052681778}
+  - {fileID: -6372462467718127004}
   - {fileID: -4317744484378405051}
   - {fileID: 1596261097592556332}
+  - {fileID: -2660248969759337808}
   - {fileID: 3601993052138810295}
   - {fileID: -2114166332174173473}
   - {fileID: -5720398451780836171}
@@ -3315,6 +3317,7 @@ MonoBehaviour:
   - {fileID: 540402892834624093}
   - {fileID: -9216546050895342338}
   - {fileID: -8458991621651638883}
+  - {fileID: 2084323183759518939}
   - {fileID: 4051062600038558925}
   - {fileID: -1197642973184508017}
   - {fileID: -3862851145075515968}
@@ -3329,6 +3332,7 @@ MonoBehaviour:
   - {fileID: -9190585343541942117}
   - {fileID: -5262283336444977206}
   - {fileID: -748211173124536541}
+  - {fileID: -8348305862583253533}
   - {fileID: 2418160522231527625}
   - {fileID: -2533924710509579448}
   - {fileID: -140185428101785082}
@@ -3337,16 +3341,12 @@ MonoBehaviour:
   - {fileID: -1134276406243675649}
   - {fileID: 7082445778740536775}
   - {fileID: 1252080952057400310}
+  - {fileID: -8200099466732163803}
   - {fileID: 6811049208181774362}
   - {fileID: 3449703107871582083}
   - {fileID: -3979492817190321455}
   - {fileID: -4774981999846220701}
   - {fileID: 42040174111234068}
-  - {fileID: -6372462467718127004}
-  - {fileID: -2660248969759337808}
-  - {fileID: -8348305862583253533}
-  - {fileID: -8200099466732163803}
-  - {fileID: 2084323183759518939}
   customLoaderName: 
   m_renderMode: 1
   m_latencyOptimization: 0

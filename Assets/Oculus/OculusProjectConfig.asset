@@ -15,7 +15,7 @@ MonoBehaviour:
   targetDeviceTypes: 04000000
   allowOptional3DofHeadTracking: 0
   handTrackingSupport: 0
-  handTrackingFrequency: 0
+  handTrackingFrequency: 2
   anchorSupport: 1
   sharedAnchorSupport: 0
   renderModelSupport: 0
@@ -40,6 +40,7 @@ MonoBehaviour:
   focusAware: 1
   requiresSystemKeyboard: 0
   experimentalFeaturesEnabled: 0
+  useForwardHeadPose: 1
   insightPassthroughEnabled: 0
   _insightPassthroughSupport: 2
   isPassthroughCameraAccessEnabled: 1

@@ -106,6 +106,7 @@ Material:
     - _ClearCoatSmoothness: 0
     - _Cull: 2
     - _Cutoff: 0.5
+    - _DepthOcclusion: 1
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
@@ -114,9 +115,10 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _LightBoost: 1.6
-    - _LightContrast: 0.8
-    - _LightWrap: 0.4
+    - _LightBoost: 1.15
+    - _LightBounce: 0.15
+    - _LightContrast: 1
+    - _LightWrap: 0.5
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005
@@ -134,7 +136,7 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0.021803856, g: 0, b: 1, a: 1}
+    - _BaseColor: {r: 0.34, g: 0.36, b: 0.62, a: 1}
     - _Color: {r: 0.021803856, g: 0, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}

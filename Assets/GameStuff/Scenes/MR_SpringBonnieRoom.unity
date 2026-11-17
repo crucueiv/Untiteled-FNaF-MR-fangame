@@ -166,9 +166,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MRDepthOcclusionController
   depthManager: {fileID: 9944559}
   occlusionMode: 2
-  depthBias: 0.06
+  depthBias: 0.12
+  shadowOcclusionMargin: 0.12
+  shadowOcclusionRelative: 0.02
+  shadowOcclusionFade: 0.06
+  blendMode: 0
+  ditherEdge: 1
+  ditherThreshold: 0.5
+  animatedNoise: 0
+  grainAmount: 0.12
+  bounceScale: 1
+  warmAmbient: 1
+  ambientColor: {r: 1, g: 0.86, b: 0.72, a: 1}
+  ambientIntensity: 0.1
   disableWithoutPassthrough: 1
   logState: 1
+  showOcclusionAsGrayscale: 0
 --- !u!114 &9944559
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -302,6 +315,16 @@ Transform:
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8320705397562128841, guid: 5f48705c5c7269146b34365181ea1f1a, type: 3}
   m_PrefabInstance: {fileID: 8599202313999994655}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &519325547 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7904023539360798315, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
+  m_PrefabInstance: {fileID: 1604525414}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &519325548 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 757697211265113984, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
+  m_PrefabInstance: {fileID: 1604525414}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &588894175
 GameObject:
@@ -812,6 +835,10 @@ PrefabInstance:
       value: -0.036290918
       objectReference: {fileID: 0}
     - target: {fileID: 3841704715585558010, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3841704715585558010, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 2c2c2d12b18e23849a6ea0ab49c942ab, type: 2}
@@ -1045,7 +1072,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7904023539360798315, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.6706952
+      value: -0.67069525
       objectReference: {fileID: 0}
     - target: {fileID: 7904023539360798315, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
       propertyPath: m_LocalRotation.x
@@ -1053,11 +1080,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7904023539360798315, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.009466953
+      value: 0.009466938
       objectReference: {fileID: 0}
     - target: {fileID: 7904023539360798315, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.19420806
+      value: -0.19420807
       objectReference: {fileID: 0}
     - target: {fileID: 8310280892606104482, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -1088,7 +1115,9 @@ PrefabInstance:
       value: 0.0004766651
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 5202911315723307194, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
+    - {fileID: 6620881393853839374, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 3955979722711734102, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
@@ -1100,6 +1129,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3955979722711734102, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1604525420}
+    - targetCorrespondingSourceObject: {fileID: 3955979722711734102, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1604525422}
   m_SourcePrefab: {fileID: 100100000, guid: 09dce4c2f26385b4bbbca4d2f801975e, type: 3}
 --- !u!1 &1604525415 stripped
 GameObject:
@@ -1195,6 +1227,29 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1604525422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1604525415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2ab69cc4f6abbe4dac5cb524b3cc8dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MRContactShadow
+  targets:
+  - {fileID: 1604525416}
+  - {fileID: 519325548}
+  - {fileID: 519325547}
+  blobMaterial: {fileID: 2100000, guid: 520048a0ddede4d4ba5a63816e530ce8, type: 2}
+  radius: 0.12
+  opacity: 0.55
+  falloffDistance: 0.25
+  surfaceOffset: 0.002
+  labelFilter: 513
+  logState: 0
 --- !u!4 &1848057836 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5727840232355573793, guid: 5f48705c5c7269146b34365181ea1f1a, type: 3}
@@ -1287,6 +1342,9 @@ MonoBehaviour:
   - {fileID: 9005288814132815609, guid: 9bd375a8d70bb7e4ba307d3421628f57, type: 3}
   - {fileID: 8271988315340836602, guid: fa416f23473df0249b5a7c98547505d6, type: 3}
   spawnPoint: {fileID: 0}
+  surfaceClearance: 0.02
+  placeOnSurface: 1
+  surfaceRayDistance: 3
 --- !u!4 &1979857985
 Transform:
   m_ObjectHideFlags: 0

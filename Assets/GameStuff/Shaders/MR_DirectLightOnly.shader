@@ -16,6 +16,9 @@ Shader "Custom/MR_DirectLightOnly"
         _LightWrap ("Wrap (suavizado del corte N.L)", Range(0, 1)) = 0.4
         _LightContrast ("Contraste de la luz", Range(0.2, 3)) = 0.8
         _LightBoost ("Multiplicador de luz", Range(0, 6)) = 1.6
+        // Relleno por luz que llega: NO depende de N.L ni de la sombra, asi que un objeto
+        // tapado por otro deja de ser negro puro. 0 = comportamiento anterior.
+        _LightBounce ("Rebote / relleno", Range(0, 1)) = 0.15
 
         [Header(Sombras)]
         _ShadowsOn ("Recibir sombras (1 si / 0 no)", Range(0, 1)) = 1
@@ -69,9 +72,8 @@ Shader "Custom/MR_DirectLightOnly"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             // Meta Depth API: META_DEPTH_GET_OCCLUSION_VALUE_WORLDPOS (1 = visible, 0 = tapado).
             #include "Packages/com.meta.xr.sdk.core/Shaders/EnvironmentDepth/URP/EnvironmentOcclusionURP.hlsl"
-
-            // Bias de profundidad global (lo fija MRDepthOcclusionController). Fuera del CBUFFER a proposito.
-            float _EnvironmentDepthBias;
+            // MR_ApplyOcclusion + _EnvironmentDepthBias + _MR_OcclusionMode (globales).
+            #include "MR_Lighting.hlsl"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
@@ -83,6 +85,7 @@ Shader "Custom/MR_DirectLightOnly"
                 half _LightWrap;
                 half _LightContrast;
                 half _LightBoost;
+                half _LightBounce;
                 half _ShadowsOn;
                 half _ShadowNormalBias;
                 half _DepthOcclusion;
@@ -155,6 +158,10 @@ Shader "Custom/MR_DirectLightOnly"
                                      * mainLight.distanceAttenuation;
                 half3 lighting = mainLight.color * DiffuseTerm(normalWS, mainLight.direction, mainAttenuation);
 
+                // Rebote: la misma luz ya consultada, sin N.L y sin sombra (solo la atenuacion del
+                // foco). No hace ninguna llamada extra a GetAdditionalLight: coste 0 de muestreo.
+                half3 bounce = mainLight.color * mainLight.distanceAttenuation;
+
                 // ---------- Luces adicionales (point / spot), con sombras y cookies ----------
                 uint pixelLightCount = GetAdditionalLightsCount();
                 LIGHT_LOOP_BEGIN(pixelLightCount)
@@ -162,6 +169,7 @@ Shader "Custom/MR_DirectLightOnly"
                     half addAttenuation = lerp(1.0h, addLight.shadowAttenuation, saturate(_ShadowsOn))
                                         * addLight.distanceAttenuation;
                     lighting += addLight.color * DiffuseTerm(normalWS, addLight.direction, addAttenuation);
+                    bounce += addLight.color * addLight.distanceAttenuation;
                 LIGHT_LOOP_END
 
                 // ---------- SIN termino ambiente (aqui no hay SampleSH ni reflection probes) ----------
@@ -169,18 +177,24 @@ Shader "Custom/MR_DirectLightOnly"
                 half contrast = max(_LightContrast, 0.01h);
                 lighting = pow(max(lighting, (half3)0), contrast) * _LightBoost;
 
+                // ---------- Rebote: relleno que NO depende de N.L ni de la sombra ----------
+                // Sin luz que llegue el rebote es 0 y el objeto sigue siendo negro puro; tapado por
+                // otro objeto sigue recibiendo esta parte, asi que deja de salir negro.
+                lighting += bounce * _LightBounce * (_MR_BounceScale > 0.0001h ? (half)_MR_BounceScale : 1.0h);
+
                 half3 color = albedo * lighting;
+
+                // ---------- Grano de sensor (global _MR_GrainAmount) ----------
+                // Multiplicativo: el negro puro sigue siendo 0 y se nota sobre todo en las zonas
+                // oscuras pero iluminadas. Coste: un frac/dot por pixel, sin muestras extra.
+                color = MR_ApplyGrain(color, input.positionCS.xy);
+
                 half4 result = half4(color, 1.0h);
 
                 // ---------- Oclusion por profundidad (manos y mandos reales) ----------
-                // clip(): el pixel ocluido NO escribe profundidad, asi la capa de oscuridad (DarknessRevealer,
-                // ZTest LEqual) tambien tapa la mano real en vez de dejar un parche sin oscurecer.
-                #if defined(HARD_OCCLUSION) || defined(SOFT_OCCLUSION)
-                    half occlusion = (half)META_DEPTH_GET_OCCLUSION_VALUE_WORLDPOS(input.positionWS, _EnvironmentDepthBias);
-                    occlusion = lerp(1.0h, occlusion, saturate(_DepthOcclusion));
-                    clip(occlusion - 0.01h);
-                    result.rgb *= occlusion;
-                #endif
+                // Dos modos conmutables con el global _MR_OcclusionMode (ver MR_Lighting.hlsl).
+                MR_ApplyOcclusion(input.positionWS, input.positionCS.xy, _DepthOcclusion,
+                                  result.rgb, result.a);
 
                 return result;
             }
@@ -217,6 +231,7 @@ Shader "Custom/MR_DirectLightOnly"
                 half _LightWrap;
                 half _LightContrast;
                 half _LightBoost;
+                half _LightBounce;
                 half _ShadowsOn;
                 half _ShadowNormalBias;
                 half _DepthOcclusion;
