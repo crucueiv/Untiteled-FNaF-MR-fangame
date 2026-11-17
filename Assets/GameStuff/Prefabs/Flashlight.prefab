@@ -263,6 +263,7 @@ GameObject:
   - component: {fileID: 6138472905164387251}
   - component: {fileID: 1741518256015790140}
   - component: {fileID: 4868104062281669270}
+  - component: {fileID: 7132983711983658859}
   m_Layer: 0
   m_Name: Flashlight
   m_TagString: KeepableObject
@@ -511,6 +512,33 @@ MonoBehaviour:
   mostrarAlActivar: 1
   ocultarAlPrimerAgarre: 1
   outlineMaterial: {fileID: 0}
+--- !u!114 &7132983711983658859
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8271988315340836602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e188795318ee7ca46989b341d4cc6f92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DepthOcclusionOnGrab
+  renderers:
+  - {fileID: 7386265590230351035}
+  - {fileID: 254345871222556813}
+  - {fileID: 1870023218914738342}
+  pares:
+  - original: {fileID: 2100000, guid: 33ab8569fef06b44ebb41819e43a7870, type: 2}
+    conOclusion: {fileID: 2100000, guid: e35b9096e77ed294eb23ec757792702e, type: 2}
+  - original: {fileID: 2100000, guid: 6a23989885f788d419e8f8907e1a79d5, type: 2}
+    conOclusion: {fileID: 2100000, guid: fa1367d1603a13b44835b0858516f2d7, type: 2}
+  - original: {fileID: 2100000, guid: d419e050b1054514da2e7cd3fda871eb, type: 2}
+    conOclusion: {fileID: 2100000, guid: ebd90e9879a48d447adca944234b8a0f, type: 2}
+  releaseDelay: 0.25
+  desactivado: 0
+  logsDetallados: 0
+  forzarOclusionEnEditor: 0
 --- !u!1 &9048023248202824644
 GameObject:
   m_ObjectHideFlags: 0
@@ -626,5 +654,20 @@ PrefabInstance:
 --- !u!4 &128756885690695889 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 65254291333519591, guid: a523a5644d614d043a8245091f4e9b64, type: 3}
+  m_PrefabInstance: {fileID: 85211988866357302}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &254345871222556813 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 191726115469201595, guid: a523a5644d614d043a8245091f4e9b64, type: 3}
+  m_PrefabInstance: {fileID: 85211988866357302}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &1870023218914738342 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 1791610146193840272, guid: a523a5644d614d043a8245091f4e9b64, type: 3}
+  m_PrefabInstance: {fileID: 85211988866357302}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &7386265590230351035 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 7471457151616361613, guid: a523a5644d614d043a8245091f4e9b64, type: 3}
   m_PrefabInstance: {fileID: 85211988866357302}
   m_PrefabAsset: {fileID: 0}

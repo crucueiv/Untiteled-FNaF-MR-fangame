@@ -165,6 +165,7 @@ GameObject:
   - component: {fileID: 7085999787604921639}
   - component: {fileID: 6727063597440989755}
   - component: {fileID: 5941142605601235501}
+  - component: {fileID: 43756143712529507}
   m_Layer: 0
   m_Name: GrabbableObject
   m_TagString: KeepableObject
@@ -383,3 +384,22 @@ MonoBehaviour:
   mostrarAlActivar: 1
   ocultarAlPrimerAgarre: 1
   outlineMaterial: {fileID: 0}
+--- !u!114 &43756143712529507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9005288814132815609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e188795318ee7ca46989b341d4cc6f92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DepthOcclusionOnGrab
+  renderers:
+  - {fileID: 7414809361950900178}
+  pares: []
+  releaseDelay: 0.25
+  desactivado: 0
+  logsDetallados: 0
+  forzarOclusionEnEditor: 0

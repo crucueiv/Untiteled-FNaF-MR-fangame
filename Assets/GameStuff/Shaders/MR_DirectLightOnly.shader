@@ -20,6 +20,10 @@ Shader "Custom/MR_DirectLightOnly"
         [Header(Sombras)]
         _ShadowsOn ("Recibir sombras (1 si / 0 no)", Range(0, 1)) = 1
         _ShadowNormalBias ("Bias normal de la sombra", Range(0, 0.2)) = 0.02
+
+        [Header(Oclusion por profundidad)]
+        // 1 = la mano/mando real tapa al objeto. 0 = nunca se ocluye (objetos que el jugador sujeta).
+        _DepthOcclusion ("Oclusion por profundidad (1 si / 0 no)", Range(0, 1)) = 1
     }
 
     SubShader
@@ -46,6 +50,9 @@ Shader "Custom/MR_DirectLightOnly"
 
             // VR: Single Pass Instanced necesita instancing en el shader.
             #pragma multi_compile_instancing
+            // Oclusion de entorno (Meta Depth API): solo fragment para no multiplicar variantes de vertice.
+            // El valor '_' (sin keyword) deja el shader exactamente como estaba.
+            #pragma multi_compile_fragment _ HARD_OCCLUSION SOFT_OCCLUSION
             // Forward+ (por si el renderer cambia de Forward a Forward+ en el futuro).
             #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
 
@@ -60,6 +67,11 @@ Shader "Custom/MR_DirectLightOnly"
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            // Meta Depth API: META_DEPTH_GET_OCCLUSION_VALUE_WORLDPOS (1 = visible, 0 = tapado).
+            #include "Packages/com.meta.xr.sdk.core/Shaders/EnvironmentDepth/URP/EnvironmentOcclusionURP.hlsl"
+
+            // Bias de profundidad global (lo fija MRDepthOcclusionController). Fuera del CBUFFER a proposito.
+            float _EnvironmentDepthBias;
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
@@ -73,6 +85,7 @@ Shader "Custom/MR_DirectLightOnly"
                 half _LightBoost;
                 half _ShadowsOn;
                 half _ShadowNormalBias;
+                half _DepthOcclusion;
             CBUFFER_END
 
             struct Attributes
@@ -157,7 +170,19 @@ Shader "Custom/MR_DirectLightOnly"
                 lighting = pow(max(lighting, (half3)0), contrast) * _LightBoost;
 
                 half3 color = albedo * lighting;
-                return half4(color, 1.0h);
+                half4 result = half4(color, 1.0h);
+
+                // ---------- Oclusion por profundidad (manos y mandos reales) ----------
+                // clip(): el pixel ocluido NO escribe profundidad, asi la capa de oscuridad (DarknessRevealer,
+                // ZTest LEqual) tambien tapa la mano real en vez de dejar un parche sin oscurecer.
+                #if defined(HARD_OCCLUSION) || defined(SOFT_OCCLUSION)
+                    half occlusion = (half)META_DEPTH_GET_OCCLUSION_VALUE_WORLDPOS(input.positionWS, _EnvironmentDepthBias);
+                    occlusion = lerp(1.0h, occlusion, saturate(_DepthOcclusion));
+                    clip(occlusion - 0.01h);
+                    result.rgb *= occlusion;
+                #endif
+
+                return result;
             }
             ENDHLSL
         }
@@ -194,6 +219,7 @@ Shader "Custom/MR_DirectLightOnly"
                 half _LightBoost;
                 half _ShadowsOn;
                 half _ShadowNormalBias;
+                half _DepthOcclusion;
             CBUFFER_END
 
             #include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
