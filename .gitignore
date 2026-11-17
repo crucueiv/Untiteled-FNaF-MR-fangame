@@ -117,3 +117,6 @@ local.properties
 
 # Modelos de terceros (no se redistribuyen)
 Assets/GameStuff/Models/
+Assets/GameStuff/Sounds/
+Assets/GameStuff/Materials/
+Assets/GameStuff/Textures/
