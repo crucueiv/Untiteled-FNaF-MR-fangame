@@ -1111,6 +1111,7 @@ GameObject:
   - component: {fileID: 313337696}
   - component: {fileID: 313337695}
   - component: {fileID: 313337694}
+  - component: {fileID: 313337697}
   m_Layer: 0
   m_Name: FnafMenuRoot
   m_TagString: Untagged
@@ -1198,6 +1199,25 @@ Transform:
   - {fileID: 139446941}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &313337697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 313337693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4db6d19a8f7e42be89cc5b7e6e12a8f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MenuPlayerAlignment
+  alinearAlInicio: 1
+  distanciaAlPanel: 1.6
+  desplazamientoLateral: 0
+  cabeza: {fileID: 0}
+  rigRaiz: {fileID: 0}
+  panelMenu: {fileID: 0}
+  intervaloReintento: 0.5
 --- !u!4 &313488528 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5288035358334754756, guid: 97385700490e69058b0241f93e40361d, type: 3}
