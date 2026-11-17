@@ -114,3 +114,6 @@ InitTestScene*.unity*
 *.keystore
 *.jks
 local.properties
+
+# Modelos de terceros (no se redistribuyen)
+Assets/GameStuff/Models/
