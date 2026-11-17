@@ -1,6 +1,10 @@
 using UnityEngine;
 using Meta.XR.MRUtilityKit;
 
+/// <summary>
+/// Generador de objetos sobre geometría real detectada por MRUK (planos y volúmenes).
+/// Detecta la cara de apoyo adecuada según la etiqueta del anclaje y aplica márgenes de seguridad para evitar caídas o penetración de mallas.
+/// </summary>
 public class MRSpawnerReworked : MonoBehaviour
 {
     [Header("Configuración Principal")]

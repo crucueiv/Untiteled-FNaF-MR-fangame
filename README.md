@@ -1,113 +1,138 @@
-# Untitled FNaF MR Fangame
+# Untiteled FNaF MR Fangame
 
-Proyecto de **Five Nights at Freddy's en realidad mixta para Meta Quest**, todavía en desarrollo. La experiencia combina passthrough, detección de la habitación del jugador y objetos virtuales interactivos. El estado actual es **alpha/WIP** (`ALPHA 0.1`).
+Experiencia de **Five Nights at Freddy's en Realidad Mixta (MR)** desarrollada en **Unity 6 (6000.3.18f1)** para **Meta Quest 3**. El proyecto combina passthrough a color en tiempo real, detección y reconstrucción espacial de la habitación física mediante Meta XR MR Utility Kit (MRUK), shaders personalizados de penumbra y colocación cinemática de animatrónicos en el entorno del jugador.
 
-<!-- MANUAL:START -->
-## Aviso legal y créditos
+El proyecto se encuentra en fase **Alpha 0.1** (Sandbox de pruebas técnicas y mecánicas).
 
-Este es un juego de fans, no oficial y sin ánimo de lucro. **Five Nights at Freddy's** es una creación de Scott Cawthon y propiedad de **Scottgames, LLC**. Este proyecto no está afiliado a Scottgames ni a Steel Wool Studios.
+---
 
-Los modelos de personajes proceden de [The FNaF Help Wanted MEGA FBX Pack Release](https://www.deviantart.com/jennydperiod/art/The-FNaF-Help-Wanted-MEGA-FBX-Pack-Release-983155006), de JennyDPeriod.
+## Aviso Legal y Términos de Licencia
 
-El proyecto es una obra de fans y no reclama la propiedad de las marcas o personajes de Five Nights at Freddy's.
-<!-- MANUAL:END -->
+Este es un proyecto no oficial, desarrollado por fans y sin ánimo de lucro. 
+- **Five Nights at Freddy's** es una creación de **Scott Cawthon** y propiedad intelectual de **Scottgames, LLC**. Este fangame no está afiliado, respaldado ni asociado con Scottgames ni con Steel Wool Studios.
+- Los modelos tridimensionales de personajes fueron compilados por **JennyDPeriod** ([The FNaF Help Wanted MEGA FBX Pack Release](https://www.deviantart.com/jennydperiod/art/The-FNaF-Help-Wanted-MEGA-FBX-Pack-Release-983155006)).
+- El código fuente original C# y los shaders desarrollados específicamente para este repositorio están licenciados bajo los términos de la **Licencia MIT** (ver [`LICENSE.md`](LICENSE.md)). Dicha licencia **no se extiende** a las marcas, personajes, modelos 3D, texturas ni efectos de sonido de la franquicia original.
 
-## Características principales
+---
 
-- Detección de habitación mediante Meta XR MR Utility Kit (MRUK).
-- Validación de puerta, mesa y cama/sofá antes de iniciar la prueba MR.
-- Spawning sobre superficies detectadas, con selección de etiqueta, ajuste a superficie, margen y rotación.
-- Sistema de iluminación virtual y passthrough con estados encendido/apagado y parpadeo.
-- Inventario físico de cintura con slots de bolsillo/hombro y reserva de objetos al soltarlos.
-- Objetos agarrables y linterna controlada por el thumbstick de la mano que la sostiene.
-- Menú 3D con puntero de controlador, retícula, selección por trigger y fallback de ratón en el Editor.
-- Personajes riggeados, poses y controladores Animator para la escena de showcase.
-- Shaders propios para oscuridad, luces y sombras en URP.
+## Estado Actual del Desarrollo (Alpha 0.1)
 
-## Requisitos
+### ✅ Funcional y Verificado en Código
+- **Menú principal 3D interactivo:** Puntero láser VR, retícula con retroalimentación háptica/visual, selección por gatillo y selector de escenas (`TestMenu.unity`).
+- **Validación del entorno real:** `RoomValidator` verifica la presencia mínima de una puerta (`DOOR_FRAME`), una mesa (`TABLE`) y una cama/sofá (`BED`/`COUCH`) antes de activar el juego.
+- **Posicionamiento cinemático de SpringBonnie:** `MRSpringBonniePlacement` y `SpringBonnieStaticPose` calculan el anclaje a la cama real y resuelven las piernas mediante cinemática inversa (IK) de 2 huesos contra el suelo.
+- **Iluminación y Penumbra MR:** Oscurecimiento dinámico del passthrough real (`RoomLightManager`) y revelado de objetos virtuales mediante linterna con cookies de luz (`Custom/MR_UltimateDarknessRevealer`).
+- **Oclusión por Profundidad en Tiempo Real:** Integración de la Meta Depth API con recortes precisos y desactivación temporal al sujetar objetos (`DepthOcclusionOnGrab`).
+- **Inventario corporal de cintura:** Cinturón virtual con seguimiento de cabeza (`InventoryBodyFollower`) y acople magnético por slots (`InventorySlot`).
+- **Manos esqueléticas FNaF:** Opción de sustituir los mandos por mallas articuladas de animatrónico con flexión analógica de dedos (`PlayerHandsVR`, `FnafHandPose`).
 
-| Componente | Versión o valor |
+### ⏳ Pendiente de Implementación
+- Navegación autónoma de animatrónicos sobre la malla de la habitación.
+- Comportamientos reactivos de acecho en esquinas físicas y cruce agachado de puertas.
+- Ciclo de noches con progresión horaria (12 AM a 6 AM), gasto de energía y condiciones de derrota (*jumpscares*).
+
+---
+
+## Requisitos del Proyecto
+
+| Requisito | Valor / Versión Exacta |
 |---|---|
-| Unity Editor | `6000.3.18f1` |
-| Plataforma objetivo | Android / Meta Quest |
-| Arquitectura Android | ARM64 |
-| Backend de scripts | IL2CPP |
-| Render pipeline | Universal Render Pipeline 17.3.0 |
-| Meta XR | `com.meta.xr.sdk.all` 209.0.0 |
-| XR Interaction Toolkit | 3.4.1 |
-| Android | Android Build Support, SDK & NDK Tools y OpenJDK incluidos con Unity |
-| Control de versiones | Git y Git LFS |
+| Motor de Desarrollo | Unity `6000.3.18f1` (Unity 6) |
+| Sistema Operativo de Desarrollo | Arch Linux (o cualquier distribución Linux / Windows compatible) |
+| Dispositivo de Destino | Meta Quest 3 |
+| Plataforma de Compilación | Android (ARM64, Scripting Backend: IL2CPP) |
+| Render Pipeline | Universal Render Pipeline (URP) `17.3.0` |
+| SDK de Meta XR | Meta XR SDK All `209.0.0` / MR Utility Kit `209.0.0` |
+| Interacción VR | XR Interaction Toolkit `3.4.1` / Meta Interaction SDK |
+| Control de Versiones | Git con Git LFS obligatorio |
 
-El proyecto usa además OpenXR, Meta OpenXR, AR Foundation, XR Hands, Composition Layers y el plugin Aura. Las versiones exactas y las dependencias transitivas están en [`Packages/manifest.json`](Packages/manifest.json) y [`Packages/packages-lock.json`](Packages/packages-lock.json).
+Las dependencias exactas se encuentran fijadas en [`Packages/manifest.json`](Packages/manifest.json) y [`Packages/packages-lock.json`](Packages/packages-lock.json).
 
-## Instalación y primeros pasos
+---
 
-1. Instala Git LFS y ejecuta `git lfs install`.
-2. Clona el repositorio y ábrelo con Unity `6000.3.18f1`.
-3. Espera a que Package Manager termine de resolver paquetes y a que Unity importe los assets.
-4. Abre `Assets/GameStuff/TestScenes/TestMenu.unity` para probar el flujo de menú o `Assets/GameStuff/TestScenes/InitialTestRoom.unity` para probar la escena MR.
-5. Para Quest, cambia a Android en **File > Build Profiles**, verifica las escenas habilitadas, conecta el dispositivo y usa **Build** o **Build And Run**.
+## Instalación y Primeros Pasos
 
-La detección de habitación, el passthrough, los permisos y la interacción XR deben validarse en un Quest real. La guía operativa de cambio de ordenador está en [`GUIA_DESARROLLO.md`](GUIA_DESARROLLO.md).
-
-## Estructura del proyecto
-
-```text
-Assets/
-├── GameStuff/
-│   ├── TestScenes/              # Menú, prueba MR y showcase de personajes
-│   ├── Scripts/                 # Sistemas propios de menú, MR, inventario y objetos
-│   ├── Prefabs/                 # Objetos agarrables, MRThings y personajes
-│   ├── Models/                  # Modelos y texturas de personajes
-│   ├── Animations/              # Poses y Animator Controllers
-│   ├── Materials/               # Materiales del juego y del menú
-│   ├── Shaders/                 # DarknessRevealer y HighlightsAndShadows
-│   └── Textures/                # Texturas propias
-├── Editor/                      # Herramientas de reconstrucción de personajes
-├── MRTemplateAssets/            # Assets y scripts de plantilla MR
-├── MetaAssets/                  # Prefabs y materiales de integración Meta
-├── Plugins/Android/             # AndroidManifest.xml
-├── Settings/, XR/, XRI/         # Configuración de render y XR
-└── Samples/                     # Muestras importadas de paquetes Unity/XR
+### 1. Clonar el Repositorio con Git LFS
+```bash
+git clone https://github.com/crucueiv/Untiteled-FNaF-MR-fangame.git
+cd Untiteled-FNaF-MR-fangame
+git lfs install
+git lfs pull
 ```
 
-La descripción técnica está dividida en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/SCRIPTS.md`](docs/SCRIPTS.md) y [`docs/SCENES_AND_ASSETS.md`](docs/SCENES_AND_ASSETS.md).
+### 2. Apertura en Unity Hub
+1. Abre **Unity Hub** y añade la carpeta clonada.
+2. Asegúrate de abrirlo con el editor **Unity 6000.3.18f1**.
+3. Espera a que el Package Manager resuelva las dependencias e importe los assets.
 
-## Controles y uso
+### 3. Escenas del Proyecto
+- `Assets/GameStuff/TestScenes/TestMenu.unity`: Menú principal y selector de niveles.
+- `Assets/GameStuff/TestScenes/InitialTestRoom.unity`: Escena MR de supervivencia, linterna e inventario.
+- `Assets/GameStuff/Scenes/MR_SpringBonnieRoom.unity`: Escena MR con SpringBonnie posado en la cama real.
+- `Assets/GameStuff/TestScenes/DriveCharacterShowcase.unity`: Galería para auditar los modelos de personajes y sus rigs (no incluida en la compilación final).
 
-- **Menú:** apunta con el controlador izquierdo o derecho; el puntero hace raycast sobre la capa de botones y el trigger selecciona. En el Editor puede usarse el fallback de ratón si está habilitado.
-- **Inicio:** `Start Game` carga `InitialTestRoom` de forma asíncrona.
-- **Linterna:** el thumbstick de la mano que la sostiene alterna el foco. La linterna se apaga al soltarse.
-- **Depuración:** el botón Start del controlador izquierdo abre/cierra el panel de depuración; permite cambiar la luz, lanzar un parpadeo y crear prefabs.
-- **Inventario:** los objetos con tag `KeepableObject` pueden reservarse en slots compatibles al soltarlos.
+---
 
-En `InitialTestRoom`, `RoomValidator` requiere una puerta, una mesa y una cama o sofá detectados por MRUK. Si no se cumplen esos elementos, la escena registra el estado de validación y no debe considerarse una prueba MR válida.
+## Compilación y Despliegue en Meta Quest 3 (Arch Linux)
 
-## Dependencias y paquetes
+1. Conecta el visor Meta Quest 3 al equipo mediante cable USB-C con modo desarrollador habilitado.
+2. Verifica la conexión por consola:
+   ```bash
+   adb devices
+   ```
+3. En Unity, abre **File > Build Profiles**, activa la plataforma **Android** y confirma que las 3 escenas principales estén marcadas.
+4. Selecciona tu Quest 3 en el selector **Run Device** y pulsa **Build And Run** (o genera el archivo `.apk` y ejecuta `adb install -r juego.apk`).
 
-Paquetes directos relevantes:
+Para una guía detallada con reglas de `udev` y depuración en Arch Linux, consulta [`docs/SETUP_LINUX_QUEST3.md`](docs/SETUP_LINUX_QUEST3.md).
 
-- Meta XR SDK All 209.0.0, MR Utility Kit 209.0.0 y Meta OpenXR 2.7.0.
-- XR Interaction Toolkit 3.4.1, XR Hands 1.7.3, OpenXR 1.16.1 y AR Foundation 6.6.2.
-- URP 17.3.0, Animation Rigging 1.4.1 e Input System 1.19.0.
-- Aura para Unity y Autopilot desde repositorios Git.
-- Unity MCP desde repositorio Git.
+---
 
-La lista completa, incluidos módulos Unity y versiones transitivas, debe consultarse en los archivos de `Packages/`; no se mantiene una segunda lista manual.
+## Controles de Juego
 
-## Roadmap y pendientes conocidos
+- **Navegación de Menú:** Apunta con el puntero láser de cualquier mando hacia los botones flotantes y presiona el gatillo (*Index Trigger*) para seleccionar.
+- **Linterna:** Agarra la linterna con el botón de grip (*Hand Trigger*). Pulsa el thumbstick (*Primary/Secondary Thumbstick*) de la mano que la sujeta para conmutar el foco de luz. La linterna se apaga al soltarse.
+- **Inventario:** Acerca cualquier objeto con la etiqueta `KeepableObject` a los slots situados en la cintura y suéltalo; el objeto quedará magnéticamente acoplado.
+- **Menú de Diagnóstico:** Pulsa el botón `Start` del mando izquierdo para abrir o cerrar el panel flotante de depuración (permite alternar iluminación, provocar parpadeos y spawnear prefabs).
 
-- Completar y validar el flujo de juego más allá de las escenas de prueba.
-- Definir el contenido funcional de la pantalla de ajustes del menú.
-- Validar en dispositivo la detección de habitación, passthrough, permisos, manos/controladores y rendimiento.
-- Revisar la organización de escenas `_Recovery` y el uso de herramientas de editor antes de convertirlas en contenido de producción.
+---
 
-Estos puntos son estado de desarrollo observado, no compromisos de fecha.
+## Estructura del Repositorio
 
-## Documentación adicional
+```text
+├── Assets/
+│   ├── GameStuff/               # Contenido original del juego
+│   │   ├── Animations/          # Poses y Animator Controllers de animatrónicos
+│   │   ├── Materials/           # Materiales URP y de menú
+│   │   ├── Models/              # Mallas FBX de animatrónicos y manos
+│   │   ├── Prefabs/             # Linterna, objetos interactivos y personajes
+│   │   ├── Scenes/              # Escena MR de SpringBonnie
+│   │   ├── Scripts/             # Código fuente C# propio del juego
+│   │   ├── Shaders/             # Shaders URP propios de penumbra y oclusión
+│   │   ├── Sounds/              # Efectos de sonido
+│   │   ├── TestRoom/            # Malla y prefab de habitación para pruebas en Editor
+│   │   └── TestScenes/          # Menú y sala inicial de pruebas MR
+│   ├── Editor/                  # Herramientas de automatización de rigs
+│   ├── MRTemplateAssets/        # Assets y scripts de plantilla MR de Meta
+│   ├── MetaAssets/              # Prefabs y recursos del SDK de Meta
+│   └── Plugins/Android/         # AndroidManifest.xml optimizado para Quest 3
+├── docs/                        # Suite documental técnica completa
+├── Packages/                    # Manifiesto y bloqueo de paquetes de Unity
+└── ProjectSettings/             # Configuración del proyecto, URP y XR
+```
 
-- [`GUIA_DESARROLLO.md`](GUIA_DESARROLLO.md): instalación, Git LFS y despliegue en Quest.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): arquitectura y flujo entre sistemas.
-- [`docs/SCRIPTS.md`](docs/SCRIPTS.md): responsabilidades y configuración de scripts propios.
-- [`docs/SCENES_AND_ASSETS.md`](docs/SCENES_AND_ASSETS.md): escenas, prefabs y organización de assets.
-- [`CHANGELOG.md`](CHANGELOG.md): cambios documentados por versión.
+---
+
+## Suite Documental
+
+- 🏛️ **[Arquitectura del Sistema](docs/ARQUITECTURA.md):** Flujo de ejecución, comunicación entre subsistemas y diagramas Mermaid.
+- 🎮 **[Mini GDD Técnico](docs/GAMEPLAY.md):** Especificación de mecánicas implementadas vs pendientes.
+- 📜 **[Referencia de Scripts](docs/SCRIPTS.md):** Catálogo de los 35 scripts C# propios con dependencias y serialización.
+- 💡 **[Shaders e Iluminación](docs/SHADERS_Y_ILUMINACION.md):** Modelado de penumbra, revelado y Meta Depth API.
+- 📦 **[Catálogo de Assets y Licencias](docs/ASSETS.md):** Inventario de modelos, texturas, audios y atribución.
+- 🐧 **[Configuración en Arch Linux](docs/SETUP_LINUX_QUEST3.md):** Guía paso a paso para Unity Hub, adb y Meta Quest 3.
+- ⚠️ **[Problemas Conocidos y Deuda Técnica](docs/PROBLEMAS_CONOCIDOS.md):** Limitaciones, riesgos de licencia y olores de código.
+- 🗺️ **[Hoja de Ruta (Roadmap)](docs/ROADMAP.md):** Fases futuras de desarrollo planificadas.
+- 🛠️ **[Guía de Contribución](CONTRIBUTING.md):** Estándares de desarrollo y directrices de Git.
+- 📝 **[Historial de Cambios](CHANGELOG.md):** Registro de cambios por versión según Keep a Changelog.
+- ⚖️ **[Términos de Licencia](LICENSE.md):** Licencia MIT para código original y descargo de responsabilidad.
+- 🤖 **[Directrices para Agentes](AGENTS.md):** Guía operativa para asistentes de IA y herramientas automatizadas.

@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Panel de diagnóstico para pruebas en tiempo de ejecución de la escena MR.
+/// Proporciona métodos para encender/apagar luces, disparar parpadeos e instanciar prefabs frente al jugador.
+/// </summary>
 public class MRDebuggerMenu : MonoBehaviour
 {
     [Header("Referencias de Iluminación")]
@@ -35,6 +39,8 @@ public class MRDebuggerMenu : MonoBehaviour
     }
 
     // --- FUNCIONES DE LUZ ---
+
+    /// <summary>Enciende la iluminación de la habitación y restaura el brillo de passthrough.</summary>
     public void DebugTurnLightsOn()
     {
         if (roomLightManager != null)
@@ -44,6 +50,7 @@ public class MRDebuggerMenu : MonoBehaviour
         }
     }
 
+    /// <summary>Apaga la iluminación virtual y oscurece la capa de passthrough del mundo real.</summary>
     public void DebugTurnLightsOff()
     {
         if (roomLightManager != null)
@@ -53,6 +60,7 @@ public class MRDebuggerMenu : MonoBehaviour
         }
     }
 
+    /// <summary>Dispara una secuencia de parpadeo lumínico con los parámetros de prueba configurados.</summary>
     public void DebugTriggerFlicker()
     {
         if (roomLightManager != null)
@@ -63,6 +71,11 @@ public class MRDebuggerMenu : MonoBehaviour
     }
 
     // --- FUNCIONES DE SPAWN ---
+
+    /// <summary>
+    /// Instancia el prefab indicado en <see cref="spawnablePrefabs"/> a 1.5 metros frente al jugador, manteniendo la orientación vertical erguida.
+    /// </summary>
+    /// <param name="index">Índice del prefab en la lista de elementos generables.</param>
     public void SpawnPrefab(int index)
     {
         if (spawnablePrefabs == null || index < 0 || index >= spawnablePrefabs.Length)

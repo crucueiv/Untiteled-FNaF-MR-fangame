@@ -1,5 +1,8 @@
 using UnityEngine;
 
+/// <summary>
+/// Paleta cromática estática para la interfaz de usuario y la ambientación visual del menú 3D.
+/// </summary>
 public static class FnafMenuPalette
 {
     public static readonly Color Void = new Color32(8, 6, 8, 255);

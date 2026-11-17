@@ -2,6 +2,11 @@ using System;
 using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// Orquestador de iluminación global para la experiencia de realidad mixta.
+/// Modula el brillo/contraste de la capa de passthrough del mundo real y la intensidad de la luz virtual principal de Unity,
+/// además de coordinar parpadeos estroboscópicos y emitir el evento estático <see cref="OnRoomLightStateChanged"/>.
+/// </summary>
 public class RoomLightManager : MonoBehaviour
 {
     [Header("Configuración de Passthrough")]
@@ -21,7 +26,10 @@ public class RoomLightManager : MonoBehaviour
     private OVRPassthroughLayer passthroughLayer;
     private bool isRoomLightOn = true;
 
-    // EVENTO: Cualquier otro script puede "escuchar" este evento para reaccionar
+    /// <summary>
+    /// Evento estático que notifica a todos los componentes suscriptores cuando el estado de iluminación de la habitación cambia.
+    /// Parámetro: true si la luz está encendida, false si está apagada.
+    /// </summary>
     public static event Action<bool> OnRoomLightStateChanged;
 
     void Start()
@@ -32,12 +40,21 @@ public class RoomLightManager : MonoBehaviour
             Debug.LogError("RoomLightManager: No se encontró un OVRPassthroughLayer.");
     }
 
+    /// <summary>
+    /// Establece el estado de iluminación de la habitación (mundo real y virtual).
+    /// </summary>
+    /// <param name="isOn">True para encender, false para apagar y oscurecer el passthrough.</param>
     public void SetRoomLight(bool isOn)
     {
         isRoomLightOn = isOn;
         ApplyLightState(isRoomLightOn ? 0f : darkBrightness, isRoomLightOn);
     }
 
+    /// <summary>
+    /// Dispara una rutina de parpadeo que alterna rápidamente entre encendido y apagado.
+    /// </summary>
+    /// <param name="totalDuration">Duración total del efecto de parpadeo en segundos.</param>
+    /// <param name="numberOfFlickers">Cantidad de ciclos de parpadeo.</param>
     public void TriggerFlicker(float totalDuration, int numberOfFlickers)
     {
         StartCoroutine(FlickerRoutine(totalDuration, numberOfFlickers));
@@ -79,12 +96,16 @@ public class RoomLightManager : MonoBehaviour
     }
 
     // --- CONTROLES DESDE EL INSPECTOR ---
+
+    /// <summary>Acción de prueba desde el menú contextual para apagar la habitación.</summary>
     [ContextMenu("💡 Apagar Habitación")]
     public void TestTurnOff() { SetRoomLight(false); }
 
+    /// <summary>Acción de prueba desde el menú contextual para encender la habitación.</summary>
     [ContextMenu("💡 Encender Habitación")]
     public void TestTurnOn() { SetRoomLight(true); }
 
+    /// <summary>Acción de prueba desde el menú contextual para ejecutar parpadeo.</summary>
     [ContextMenu("⚡ Probar Parpadeo (Flickering)")]
     public void TestFlickerAction()
     {

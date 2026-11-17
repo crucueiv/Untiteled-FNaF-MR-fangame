@@ -1,5 +1,8 @@
 using UnityEngine;
 
+/// <summary>
+/// Controlador de la linterna interactiva. Gestiona el encendido y apagado de la fuente de luz Spotlight.
+/// </summary>
 public class FlashlightController : MonoBehaviour
 {
     [Header("Referencias")]

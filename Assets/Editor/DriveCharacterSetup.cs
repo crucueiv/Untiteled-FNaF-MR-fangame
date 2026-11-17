@@ -8,6 +8,10 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Herramienta de automatización en editor para generar, validar y auditar los prefabs, materiales y animaciones de animatrónicos en el showcase.
+/// Diseñada para ejecución programática o mediante línea de comandos.
+/// </summary>
 public static class DriveCharacterSetup
 {
     private const string ModelRoot = "Assets/GameStuff/Models/DriveRigged";
@@ -23,6 +27,9 @@ public static class DriveCharacterSetup
         public bool Golden;
     }
 
+    /// <summary>
+    /// Genera la estructura completa de carpetas, materiales URP, prefabs riggeados y la escena de showcase para todos los personajes definidos.
+    /// </summary>
     public static void GenerateAll()
     {
         EnsureFolder("Assets/GameStuff");
@@ -94,6 +101,10 @@ public static class DriveCharacterSetup
         Debug.Log($"DriveCharacterSetup complete: generated {prefabs.Count} prefabs and {ScenePath}.");
     }
 
+    /// <summary>
+    /// Valida que todos los prefabs de animatrónicos contengan componentes Animator, SkinnedMeshRenderer y DynamicRigHooks,
+    /// y verifica que la escena de showcase permanezca excluida de Build Settings.
+    /// </summary>
     public static void ValidateAll()
     {
         var prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { PrefabRoot });
@@ -123,6 +134,9 @@ public static class DriveCharacterSetup
         Debug.Log($"DriveCharacterSetup validation complete: {valid} prefabs validated; showcase excluded from Build Settings.");
     }
 
+    /// <summary>
+    /// Audita e imprime en consola los materiales y texturas asociados a cada slot de renderizado de los prefabs.
+    /// </summary>
     public static void AuditMaterials()
     {
         var prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { PrefabRoot });
@@ -151,6 +165,9 @@ public static class DriveCharacterSetup
         }
     }
 
+    /// <summary>
+    /// Audita los materiales embebidos o mapeados en los archivos FBX fuente de los modelos 3D.
+    /// </summary>
     public static void AuditSourceMaterials()
     {
         var fbxGuids = AssetDatabase.FindAssets("t:Model", new[] { ModelRoot });
