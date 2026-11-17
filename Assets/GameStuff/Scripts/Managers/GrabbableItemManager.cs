@@ -2,6 +2,11 @@ using UnityEngine;
 using Oculus.Interaction;
 using System.Linq;
 
+/// <summary>
+/// Gestiona el ciclo de vida visual y físico de un objeto agarrable mediante el Interaction SDK de Meta.
+/// Oculta el modelo del controlador en la mano que sujeta el objeto, desvincula el transform de slots de inventario
+/// y restaura las físicas de Rigidbody al liberarlo.
+/// </summary>
 public class GrabbableItemManager : MonoBehaviour
 {
     [Header("Configuración de Agarre")]

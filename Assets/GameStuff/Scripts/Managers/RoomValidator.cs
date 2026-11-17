@@ -2,6 +2,10 @@ using UnityEngine;
 using Meta.XR.MRUtilityKit;
 using System.Collections.Generic;
 
+/// <summary>
+/// Valida que la habitación real detectada por Meta XR MR Utility Kit (MRUK) cumpla los requisitos físicos del juego.
+/// Exige al menos una puerta, una mesa y una cama o sofá para marcar la sala como válida y registra la mesa más cercana.
+/// </summary>
 public class RoomValidator : MonoBehaviour
 {
     [Header("Referencias")]

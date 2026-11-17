@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
+/// <summary>
+/// Orienta de forma progresiva y natural el cuerpo, cabeza y ojos del personaje animatrónico en el menú 3D hacia la posición de la cámara del jugador.
+/// Limita los ángulos máximos de yaw y pitch por cada articulación para evitar giros anómalos.
+/// </summary>
 public sealed class FnafGazeFollower : MonoBehaviour
 {
     [FormerlySerializedAs("gazeTarget")]

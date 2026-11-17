@@ -4,6 +4,10 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+/// <summary>
+/// Controlador principal de la interfaz y máquina de estados del menú 3D en realidad virtual.
+/// Gestiona la transición entre pantallas (Splash, Principal, Ajustes, Selector de Escena) y la carga asíncrona de niveles con fundido a negro.
+/// </summary>
 public sealed class FnafMenuController : MonoBehaviour
 {
     public enum MenuScreen
